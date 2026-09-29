@@ -7,6 +7,11 @@ export const en = {
     manageBookingDescription: "Look up or cancel your MOATSEM appointment using your booking reference and email address.",
   },
 
+  demoBanner: {
+    message: "Demo project — this barbershop isn't real. Feel free to try booking.",
+    dismiss: "Dismiss demo notice",
+  },
+
   nav: {
     home: "Home",
     services: "Services",
@@ -203,8 +208,8 @@ export const en = {
     dateLabel: "Date",
     timeLabel: "Time",
     priceLabel: "Price",
-    emailFailedNotice:
-      "Your booking is confirmed, but we couldn't send a confirmation email to your address right now. Please save your reference below — it's all you need to manage this appointment.",
+    demoEmailNotice:
+      "Demo mode: confirmation emails aren't sent to customers. Save your booking reference above to look up or cancel this test booking.",
     manageBookingHint: "Need to cancel or check this booking later? Use your reference and email on the",
     manageBookingLinkText: "Manage Booking",
     manageBookingHintSuffix: "page.",
@@ -266,9 +271,11 @@ export const en = {
   footer: {
     tagline: "A premium barber shop built on precision, professionalism, and personal care. Every visit, one standard.",
     navigate: "Navigate",
-    visitUs: "Visit Us",
-    phone: "+1 (000) 000-0000",
-    address: "123 Example Street, Your City",
+    hours: "Hours",
+    builtBy: "Built by Moatsem",
+    photoCreditsLabel: "Photo credits:",
+    photoCreditBy: "by",
+    otherPhotosCredit: "Other photos: Unsplash License and public domain.",
     rightsReserved: "All rights reserved.",
   },
 };

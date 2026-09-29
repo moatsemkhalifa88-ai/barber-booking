@@ -224,11 +224,9 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
             </dl>
           </div>
 
-          {confirmation.customerEmailDelivered === false ? (
-            <p className="max-w-md rounded-lg border border-gold/40 bg-gold/5 px-4 py-3 text-xs text-gold-light">
-              {dict.booking.emailFailedNotice}
-            </p>
-          ) : null}
+          <p className="max-w-md rounded-lg border border-gold/40 bg-gold/5 px-4 py-3 text-xs text-gold-light">
+            {dict.booking.demoEmailNotice}
+          </p>
 
           <p className="text-xs text-muted">
             {dict.booking.manageBookingHint}{" "}

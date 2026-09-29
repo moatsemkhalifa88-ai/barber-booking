@@ -1,6 +1,21 @@
 import { Bidi } from "@/components/ui/Bidi";
 import type { Dictionary } from "@/i18n";
 
+// Author profile links. An entry with an empty href is not rendered.
+const profileLinks = [
+  { label: "GitHub", href: "" },
+  { label: "LinkedIn", href: "" },
+].filter((link) => link.href);
+
+// CC BY 2.0 requires visible attribution (see public/images/CREDITS.md).
+const ccPhotoCredit = {
+  title: "Attractive hairdresser is shaving male beard with the knife",
+  sourceUrl: "https://www.flickr.com/photos/nenadstojkovic/48987723271/",
+  author: "Nenad Stojkovic",
+  license: "CC BY 2.0",
+  licenseUrl: "https://creativecommons.org/licenses/by/2.0/",
+};
+
 export function Footer({ dict }: { dict: Dictionary }) {
   const navLinks = [
     { label: dict.nav.home, href: "/#home" },
@@ -21,6 +36,20 @@ export function Footer({ dict }: { dict: Dictionary }) {
             MOATSEM
           </span>
           <p className="max-w-sm text-sm leading-relaxed text-muted">{dict.footer.tagline}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+            <span className="text-cream">{dict.footer.builtBy}</span>
+            {profileLinks.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted underline-offset-4 transition-colors duration-200 hover:text-gold-light hover:underline"
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
         </div>
 
         <div className="flex flex-col gap-4">
@@ -43,7 +72,7 @@ export function Footer({ dict }: { dict: Dictionary }) {
 
         <div className="flex flex-col gap-4">
           <h3 className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">
-            {dict.footer.visitUs}
+            {dict.footer.hours}
           </h3>
           <ul className="flex flex-col gap-2 text-sm text-muted">
             {dayOrder.map((day) => {
@@ -58,16 +87,35 @@ export function Footer({ dict }: { dict: Dictionary }) {
               );
             })}
           </ul>
-          <p className="mt-2 text-sm text-muted">
-            <Bidi>{dict.footer.phone}</Bidi>
-          </p>
-          <p className="text-sm text-muted">{dict.footer.address}</p>
         </div>
       </div>
 
       <div className="border-t border-line/80">
-        <div className="mx-auto max-w-7xl px-6 py-6 text-center text-xs text-muted sm:px-8 lg:px-12">
-          &copy; <Bidi>{new Date().getFullYear()}</Bidi> MOATSEM. {dict.footer.rightsReserved}
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-6 py-6 text-center text-xs text-muted sm:px-8 lg:px-12">
+          <p>
+            {dict.footer.photoCreditsLabel}{" "}
+            <a
+              href={ccPhotoCredit.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 hover:text-gold-light"
+            >
+              <bdi>“{ccPhotoCredit.title}”</bdi>
+            </a>{" "}
+            {dict.footer.photoCreditBy} <bdi>{ccPhotoCredit.author}</bdi>,{" "}
+            <a
+              href={ccPhotoCredit.licenseUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 hover:text-gold-light"
+            >
+              <bdi>{ccPhotoCredit.license}</bdi>
+            </a>
+            . {dict.footer.otherPhotosCredit}
+          </p>
+          <p>
+            &copy; <Bidi>{new Date().getFullYear()}</Bidi> MOATSEM. {dict.footer.rightsReserved}
+          </p>
         </div>
       </div>
     </footer>

@@ -9,6 +9,11 @@ export const he: Dictionary = {
     manageBookingDescription: "אתרו או בטלו את התור שלכם ב-MOATSEM באמצעות מספר ההזמנה וכתובת האימייל.",
   },
 
+  demoBanner: {
+    message: "פרויקט הדגמה – המספרה אינה קיימת. מוזמנים לנסות להזמין תור.",
+    dismiss: "סגירת הודעת ההדגמה",
+  },
+
   nav: {
     home: "דף הבית",
     services: "שירותים",
@@ -203,8 +208,8 @@ export const he: Dictionary = {
     dateLabel: "תאריך",
     timeLabel: "שעה",
     priceLabel: "מחיר",
-    emailFailedNotice:
-      "התור שלך אושר, אך לא הצלחנו לשלוח אימייל אישור לכתובת שלך כרגע. שמרו את מספר ההזמנה למטה — זה כל מה שצריך כדי לנהל את התור.",
+    demoEmailNotice:
+      "מצב הדגמה: אימייל אישור אינו נשלח ללקוחות. שמרו את מספר ההזמנה שלמעלה כדי לאתר או לבטל את תור הניסיון.",
     manageBookingHint: "צריכים לבטל או לבדוק את התור בהמשך? השתמשו במספר ההזמנה והאימייל בעמוד",
     manageBookingLinkText: "ניהול תור",
     manageBookingHintSuffix: ".",
@@ -266,9 +271,11 @@ export const he: Dictionary = {
   footer: {
     tagline: "מספרת פרימיום שנבנתה על דיוק, מקצועיות וטיפול אישי. כל ביקור, סטנדרט אחד.",
     navigate: "ניווט",
-    visitUs: "בקרו אותנו",
-    phone: "+1 (000) 000-0000",
-    address: "רחוב לדוגמה 123, העיר שלך",
+    hours: "שעות פעילות",
+    builtBy: "נבנה על ידי Moatsem",
+    photoCreditsLabel: "קרדיט לתמונות:",
+    photoCreditBy: "מאת",
+    otherPhotosCredit: "שאר התמונות: רישיון Unsplash ונחלת הכלל.",
     rightsReserved: "כל הזכויות שמורות.",
   },
 };
