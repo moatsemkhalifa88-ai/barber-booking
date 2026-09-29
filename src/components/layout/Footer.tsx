@@ -1,11 +1,7 @@
 import { Bidi } from "@/components/ui/Bidi";
 import type { Dictionary } from "@/i18n";
 
-// Author profile links. An entry with an empty href is not rendered.
-const profileLinks = [
-  { label: "GitHub", href: "" },
-  { label: "LinkedIn", href: "" },
-].filter((link) => link.href);
+const AUTHOR_EMAIL = "moatsem.khalifa88@gmail.com";
 
 // CC BY 2.0 requires visible attribution (see public/images/CREDITS.md).
 const ccPhotoCredit = {
@@ -38,17 +34,12 @@ export function Footer({ dict }: { dict: Dictionary }) {
           <p className="max-w-sm text-sm leading-relaxed text-muted">{dict.footer.tagline}</p>
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
             <span className="text-cream">{dict.footer.builtBy}</span>
-            {profileLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-muted underline-offset-4 transition-colors duration-200 hover:text-gold-light hover:underline"
-              >
-                {link.label}
-              </a>
-            ))}
+            <a
+              href={`mailto:${AUTHOR_EMAIL}`}
+              className="text-muted underline-offset-4 transition-colors duration-200 hover:text-gold-light hover:underline"
+            >
+              <bdi>{AUTHOR_EMAIL}</bdi>
+            </a>
           </div>
         </div>
 
