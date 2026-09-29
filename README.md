@@ -4,7 +4,7 @@ A bilingual (English / Hebrew) barbershop website with real-time online booking,
 
 > **Demo project.** The barbershop is fictional. You can make and cancel test bookings on the live demo.
 
-**Live demo:** _(link TBD)_
+**Live demo:** https://barber-booking-ruddy.vercel.app
 
 ## Screenshots
 
