@@ -2,7 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getBarberAvailability } from "@/lib/booking/availability";
-import { addMinutesToTime, isBookableDate, isPastInShopTimezone } from "@/lib/booking/datetime";
+import { addMinutesToTime, isBookableDate, isPastInShopTimezone, toHourMinute } from "@/lib/booking/datetime";
 import { generateBookingReference } from "@/lib/booking/reference";
 import { getMissingEnvVars, isDevelopment, isSupabaseConfigured, SUPABASE_ENV_VARS } from "@/lib/env";
 import {
@@ -164,8 +164,8 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Ac
         servicePriceIls: service.price_ils,
         barberName: barber.name,
         date: appointment.appointment_date,
-        startTime: appointment.start_time,
-        endTime: appointment.end_time,
+        startTime: toHourMinute(appointment.start_time),
+        endTime: toHourMinute(appointment.end_time),
         locale,
       };
 
@@ -194,8 +194,8 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Ac
           bookingReference: appointment.booking_reference,
           status: appointment.status,
           date: appointment.appointment_date,
-          startTime: appointment.start_time,
-          endTime: appointment.end_time,
+          startTime: toHourMinute(appointment.start_time),
+          endTime: toHourMinute(appointment.end_time),
           service: {
             id: service.id,
             name: service.name,
@@ -257,8 +257,8 @@ function toBookingSummary(
     bookingReference: row.booking_reference,
     status: row.status,
     date: row.appointment_date,
-    startTime: row.start_time,
-    endTime: row.end_time,
+    startTime: toHourMinute(row.start_time),
+    endTime: toHourMinute(row.end_time),
     service: {
       id: row.services.id,
       name: row.services.name,
@@ -353,8 +353,8 @@ export async function cancelBookingAction(reference: string, email: string): Pro
     servicePriceIls: data.services.price_ils,
     barberName: data.barbers.name,
     date: data.appointment_date,
-    startTime: data.start_time,
-    endTime: data.end_time,
+    startTime: toHourMinute(data.start_time),
+    endTime: toHourMinute(data.end_time),
     cancelledAt,
     locale,
   };

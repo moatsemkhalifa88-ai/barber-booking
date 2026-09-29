@@ -59,3 +59,8 @@ export function isBookableDate(dateString: string): boolean {
   const dayOfWeek = dayOfWeekForDate(dateString);
   return (BOOKABLE_DAYS_OF_WEEK as readonly number[]).includes(dayOfWeek);
 }
+
+/** Postgres `time` ("HH:mm:ss") -> display "HH:mm". Leaves "HH:mm" unchanged. */
+export function toHourMinute(time: string): string {
+  return time.slice(0, 5);
+}
