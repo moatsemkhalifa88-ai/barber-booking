@@ -44,7 +44,7 @@ export const en = {
     titleHighlight: "at a time that suits you.",
     subtitle:
       "Three professional barbers, personal attention and real time for every client. Choose a service, a day and a time — and your chair is reserved.",
-    subtitleShort: "Personal attention, precision in every detail, and your chair reserved in a minute.",
+    subtitleShort: "Personal attention, precision in every detail, and an appointment booked in a minute.",
     imageAlt: "A barber trimming a client's beard with scissors in a warm, dimly lit barbershop",
     ctaBook: "Book Now",
     ctaServices: "Services & Prices",
@@ -206,7 +206,7 @@ export const en = {
     noEarliest: "No free times in the next two weeks.",
     noSlotsForDay: "No free times on this day. Try another day or the earliest available time.",
     anyBarber: "Any available barber",
-    anyBarberHint: "We'll book you with a barber who is free at this time.",
+    anyBarberHint: "We'll book you with a barber who is free at the time you chose.",
     copy: "Copy",
     copied: "Copied",
     copyAria: "Copy booking reference",

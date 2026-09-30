@@ -200,3 +200,192 @@ a,
     scroll-snap-align: start;
   }
 }
+
+/*
+ * Card motion — Services and Barbers (see "Motion" in DESIGN_SYSTEM.md).
+ * Unlayered on purpose: these rules must win over Tailwind utilities (which
+ * live in a cascade layer), e.g. the CTA's bg-surface on hover.
+ * Only transform, opacity and box-shadow animate.
+ *   - Hover effects: pointer devices only (hover: hover and pointer: fine).
+ *   - Keyboard focus: the same effects, on any device.
+ *   - Touch: a short press-down on :active.
+ *   - Reduced motion: no movement or zoom; colour changes stay (instant).
+ */
+:root {
+  --ease-out-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --shadow-card-lift: 0 4px 10px rgb(28 25 23 / 0.06), 0 18px 40px rgb(138 90 11 / 0.14);
+}
+
+.service-card,
+.barber-card {
+  box-shadow: var(--shadow-card);
+  transition:
+    transform 250ms var(--ease-out-soft),
+    box-shadow 250ms var(--ease-out-soft);
+}
+
+/* Thin gold outline that fades in on top of the card (and its photo). */
+.service-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border: 1px solid var(--color-accent);
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 250ms var(--ease-out-soft);
+}
+
+.service-card__media img,
+.barber-card__photo {
+  transition: transform 600ms var(--ease-out-soft);
+}
+
+.service-card__price {
+  display: inline-block;
+  transition: transform 250ms var(--ease-out-soft);
+}
+
+/* Gold ring around the barber photo: fades and settles in from slightly smaller. */
+.barber-card__ring {
+  position: absolute;
+  inset: -5px;
+  border-radius: 9999px;
+  border: 2px solid var(--color-accent);
+  opacity: 0;
+  transform: scale(0.88);
+  transition:
+    opacity 300ms var(--ease-out-soft),
+    transform 300ms var(--ease-out-soft);
+}
+
+/* Gold underline under the barber's name, growing from the start edge. */
+.barber-card__name {
+  position: relative;
+  display: inline-block;
+}
+
+.barber-card__name::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -3px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 300ms var(--ease-out-soft);
+}
+
+[dir="rtl"] .barber-card__name::after {
+  transform-origin: right;
+}
+
+/* ---- Active state (shared by hover on pointer devices and keyboard focus) ---- */
+@media (hover: hover) and (pointer: fine) {
+  .service-card:hover,
+  .barber-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card-lift);
+  }
+  .service-card:hover::after {
+    opacity: 1;
+  }
+  .service-card:hover .service-card__media img,
+  .barber-card:hover .barber-card__photo {
+    transform: scale(1.06);
+  }
+  .service-card:hover .service-card__price {
+    transform: scale(1.05);
+  }
+  .service-card:hover .service-card__cta {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+  .barber-card:hover .barber-card__ring {
+    opacity: 1;
+    transform: none;
+  }
+  .barber-card:hover .barber-card__name::after {
+    transform: scaleX(1);
+  }
+}
+
+/* Keyboard focus mirrors hover (:focus-visible only, so a tap doesn't leave cards "stuck" lifted). */
+.service-card:has(:focus-visible),
+.barber-card:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card-lift);
+}
+.barber-card:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+.service-card:has(:focus-visible)::after {
+  opacity: 1;
+}
+.service-card:has(:focus-visible) .service-card__media img,
+.barber-card:focus-visible .barber-card__photo {
+  transform: scale(1.06);
+}
+.service-card:has(:focus-visible) .service-card__price {
+  transform: scale(1.05);
+}
+.service-card:has(:focus-visible) .service-card__cta {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+.barber-card:focus-visible .barber-card__ring {
+  opacity: 1;
+  transform: none;
+}
+.barber-card:focus-visible .barber-card__name::after {
+  transform: scaleX(1);
+}
+
+/* Touch press feedback. */
+.service-card:active,
+.barber-card:active {
+  transform: scale(0.98);
+  transition-duration: 120ms;
+}
+
+/* ---- Scroll reveal ----
+ * Cards are never hidden up front: ScrollReveal (a client component) only sets
+ * data-reveal="in" as a card enters the viewport, which plays this one-shot
+ * animation. Without JavaScript, nothing is ever hidden. */
+@keyframes card-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+[data-reveal="in"] {
+  animation: card-reveal 550ms var(--ease-out-soft) backwards;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .service-card,
+  .barber-card,
+  .service-card:hover,
+  .barber-card:hover,
+  .service-card:has(:focus-visible),
+  .barber-card:focus-visible,
+  .service-card:active,
+  .barber-card:active,
+  .service-card .service-card__media img,
+  .barber-card .barber-card__photo,
+  .service-card .service-card__price,
+  .barber-card .barber-card__ring {
+    transform: none !important;
+  }
+  [data-reveal="in"] {
+    animation: none;
+  }
+}

@@ -13,7 +13,7 @@ export function BookServiceButton({ serviceName, label }: { serviceName: string;
     <Button
       href="#booking"
       variant="secondary"
-      className="mt-1 w-full"
+      className="service-card__cta mt-1 w-full"
       onClick={(event) => {
         event.preventDefault();
         window.dispatchEvent(new CustomEvent<BookServiceEventDetail>(BOOK_SERVICE_EVENT, { detail: { serviceName } }));

@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { BackToTopButton, MobileActionBar } from "@/components/layout/MobileActionBar";
+import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { Hero } from "@/components/home/Hero";
 import { About } from "@/components/home/About";
 import { Services } from "@/components/home/Services";
@@ -48,6 +49,7 @@ export default async function Home() {
       <Footer dict={dict} />
       <MobileActionBar page="home" />
       <BackToTopButton />
+      <ScrollReveal />
     </>
   );
 }

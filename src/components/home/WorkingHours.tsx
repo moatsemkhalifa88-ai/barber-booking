@@ -21,12 +21,16 @@ export function WorkingHours({ dict }: { dict: Dictionary }) {
                 key={day.day}
                 className={`flex min-h-12 items-center justify-between gap-4 px-4 ${isToday ? "bg-accent-soft" : ""}`}
               >
-                <dt className={`flex items-center gap-2 text-base ${isToday ? "font-bold text-fg" : "text-fg"}`}>
-                  {dict.workingHours.days[day.day].label}
+                <dt className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-base ${isToday ? "font-bold text-fg" : "text-fg"}`}>
+                  <span>{dict.workingHours.days[day.day].label}</span>
                   {isToday ? (
-                    <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-on-primary">
-                      {dict.workingHours.todayLabel}
-                    </span>
+                    <>
+                      {/* Separator for screen readers and copied text: "יום רביעי, היום", not "יום רביעיהיום". */}
+                      <span className="sr-only">, </span>
+                      <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs leading-5 font-bold text-on-primary">
+                        {dict.workingHours.todayLabel}
+                      </span>
+                    </>
                   ) : null}
                 </dt>
                 <dd className={`text-base font-semibold tabular-nums ${day.isOpen ? "text-fg" : "text-muted"}`}>

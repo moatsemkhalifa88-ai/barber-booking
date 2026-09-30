@@ -60,7 +60,7 @@ Every Hebrew string on the site and in the emails, grouped by section. It is gen
 | `titleLead` | תספורת מדויקת, |
 | `titleHighlight` | בשעה שנוחה לכם. |
 | `subtitle` | שלושה ספרים מקצועיים, יחס אישי וזמן אמיתי בכל ביקור. בוחרים שירות, יום ושעה – והכיסא שמור לכם. |
-| `subtitleShort` | יחס אישי, דיוק בכל פרט, והכיסא שמור לכם בתוך דקה. |
+| `subtitleShort` | יחס אישי, דיוק בכל פרט, ותור שנקבע בתוך דקה. |
 | `imageAlt` | ספר מסדר במספריים זקן של לקוח, במספרה באור חמים ועמום |
 | `ctaBook` | הזמינו תור |
 | `ctaServices` | שירותים ומחירים |
@@ -100,7 +100,7 @@ Every Hebrew string on the site and in the emails, grouped by section. It is gen
 | `items.kids-haircut.name` | תספורת ילדים |
 | `items.kids-haircut.description` | תספורת סבלנית ועדינה לילדים, באווירה רגועה ומזמינה. |
 | `items.facial-treatment.name` | טיפול פנים |
-| `items.facial-treatment.description` | טיפול מרענן שמנקה ומרגיע את העור ומשאיר תחושת רעננות. |
+| `items.facial-treatment.description` | טיפול פנים שמנקה, מרגיע ומשאיר את העור רענן. |
 | `nameByEnglish.Men's Haircut` | תספורת גברים |
 | `nameByEnglish.Kids' Haircut` | תספורת ילדים |
 | `nameByEnglish.Facial Treatment` | טיפול פנים |
@@ -215,7 +215,7 @@ Every Hebrew string on the site and in the emails, grouped by section. It is gen
 | `noEarliest` | לא מצאנו תור פנוי בשבועיים הקרובים. |
 | `noSlotsForDay` | אין תורים פנויים ביום הזה. נסו יום אחר או את התור הפנוי הקרוב. |
 | `anyBarber` | כל ספר פנוי |
-| `anyBarberHint` | נשבץ אתכם אצל ספר שפנוי בשעה הזו. |
+| `anyBarberHint` | נשבץ אתכם אצל ספר שפנוי בשעה שבחרתם. |
 | `copy` | העתקה |
 | `copied` | הועתק |
 | `copyAria` | העתקת מספר ההזמנה |

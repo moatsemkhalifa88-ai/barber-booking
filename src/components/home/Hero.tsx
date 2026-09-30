@@ -9,9 +9,9 @@ import type { Dictionary } from "@/i18n";
  */
 export function Hero({ dict }: { dict: Dictionary }) {
   const stats = [
-    [dict.hero.statBarbersLabel, dict.hero.statBarbersValue],
-    [dict.hero.statServicesLabel, dict.hero.statServicesValue],
-    [dict.hero.statOpenDaysLabel, dict.hero.statOpenDaysValue],
+    { key: "barbers", value: dict.hero.statBarbersValue, label: dict.hero.statBarbersLabel, valueFirst: true },
+    { key: "services", value: dict.hero.statServicesValue, label: dict.hero.statServicesLabel, valueFirst: true },
+    { key: "open", value: dict.hero.statOpenDaysValue, label: dict.hero.statOpenDaysLabel, valueFirst: false },
   ];
 
   return (
@@ -50,17 +50,33 @@ export function Hero({ dict }: { dict: Dictionary }) {
             </Button>
           </div>
 
-          <dl className="mt-3 hidden gap-10 border-t border-border pt-5 sm:flex">
-            {stats.map(([label, value]) => (
-              <div key={label} className="flex flex-col gap-0.5">
-                <dt className="text-sm text-muted">{label}</dt>
-                <dd className="font-display text-2xl font-bold text-fg">
-                  {/* <bdi> picks direction from the content: "א׳–ה׳" stays RTL, "Sun–Thu" LTR. */}
-                  <bdi>{value}</bdi>
-                </dd>
-              </div>
+          {/* One line, number first: "3 ספרים · 3 שירותים · פתוח א׳–ה׳". */}
+          <ul className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[15px] text-muted sm:mt-2 sm:text-base">
+            {stats.map((stat, index) => (
+              <li key={stat.key} className="flex items-center gap-2">
+                {index > 0 ? (
+                  <span aria-hidden="true" className="text-border-strong">
+                    ·
+                  </span>
+                ) : null}
+                <span>
+                  {stat.valueFirst ? (
+                    <>
+                      <strong className="font-bold text-fg">{stat.value}</strong> {stat.label}
+                    </>
+                  ) : (
+                    <>
+                      {stat.label}{" "}
+                      {/* <bdi> picks direction from the content: "א׳–ה׳" stays RTL, "Sun–Thu" LTR. */}
+                      <strong className="font-bold text-fg">
+                        <bdi>{stat.value}</bdi>
+                      </strong>
+                    </>
+                  )}
+                </span>
+              </li>
             ))}
-          </dl>
+          </ul>
         </div>
       </div>
     </section>

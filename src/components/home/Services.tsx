@@ -22,9 +22,10 @@ export function Services({ dict, locale }: { dict: Dictionary; locale: Locale })
             return (
               <article
                 key={service.id}
-                className="flex w-[80%] flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-card sm:w-[46%] md:w-auto"
+                data-reveal=""
+                className="service-card relative flex w-[80%] flex-col overflow-hidden rounded-lg border border-border bg-surface sm:w-[46%] md:w-auto"
               >
-                <div className="relative aspect-[16/10] w-full">
+                <div className="service-card__media relative aspect-[16/10] w-full overflow-hidden">
                   <Image
                     src={service.image}
                     alt={format(dict.services.imageAlt, { name })}
@@ -37,7 +38,7 @@ export function Services({ dict, locale }: { dict: Dictionary; locale: Locale })
                 <div className="flex flex-1 flex-col gap-3 p-4 lg:p-6">
                   <div className="flex items-baseline justify-between gap-3">
                     <h3 className="font-display text-xl font-bold text-fg lg:text-2xl">{name}</h3>
-                    <span className="text-xl font-bold whitespace-nowrap text-accent tabular-nums">
+                    <span className="service-card__price text-xl font-bold whitespace-nowrap text-accent tabular-nums">
                       <Bidi>{formatPrice(service.priceIls, locale)}</Bidi>
                     </span>
                   </div>

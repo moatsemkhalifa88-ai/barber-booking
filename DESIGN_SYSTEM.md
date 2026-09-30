@@ -102,11 +102,24 @@ Both are loaded with `next/font/google` using the subsets `hebrew` + `latin`, so
 ## 5. Touch, motion, RTL
 
 - Every interactive element is **≥ 48 px** tall (icon buttons 44 px visual, 48 px hit area), with an **8 px** gap between neighbouring targets.
-- **Press feedback within 100 ms.** Enter transitions take 200–250 ms and exits about 150 ms. Only `transform` and `opacity` are animated. Everything is disabled under `prefers-reduced-motion`.
+- **Press feedback within 100 ms.** Enter transitions take 200–250 ms and exits about 150 ms. Only `transform`, `opacity` and `box-shadow` are animated. Movement is disabled under `prefers-reduced-motion` (see Motion below).
 - **Logical directions only:** `ms/me/ps/pe`, `start/end`, `text-start`. Directional icons (chevrons, arrows) mirror in RTL (`rtl:-scale-x-100`); checkmarks, clocks and logos do not.
 - Times, dates, prices, phone numbers, emails and references are wrapped in `<bdi>` / `Bidi` (LTR), and email and phone inputs use `dir="ltr"`.
 - The week starts on **Sunday**.
 - All "today" and day-of-week logic uses **Asia/Jerusalem** on both server and client.
+
+### Motion
+
+The card motion is defined in `globals.css` (`.service-card`, `.barber-card`, `[data-reveal]`) and `ScrollReveal.tsx`.
+
+- **Animate only** `transform`, `opacity` and `box-shadow`, so nothing shifts the layout.
+- **Timing:** UI transitions take 200–300 ms, image zoom 600 ms, and the scroll reveal 550 ms. All use an ease-out curve, `cubic-bezier(0.22, 0.61, 0.36, 1)`.
+- **Hover** applies only inside `@media (hover: hover) and (pointer: fine)`. Keyboard focus triggers the same effects on any device: `:has(:focus-visible)` for service cards, and `:focus-visible` for barber cards, which are focusable.
+  - Service card: lifts 4 px with a warm shadow, a 1 px gold outline fades in, the photo zooms to 1.06, the price to 1.05, and the button fills with `primary`.
+  - Barber card: lifts 4 px, a gold ring settles in around the photo, the photo zooms to 1.06, and a gold underline grows under the name from the start edge (right in RTL, left in LTR).
+- **Touch:** cards scale to 0.98 on `:active` for 120 ms. iOS needs a passive `touchstart` listener for `:active` to work.
+- **Scroll reveal:** cards fade in and rise 16 px once, staggered 80 ms, as they enter the screen. Nothing is hidden before JavaScript runs, and cards already on screen at load don't animate.
+- **Reduced motion:** no movement, zoom or reveal. Colour changes (outline, button fill) still apply, instantly.
 
 ### Formatting
 
