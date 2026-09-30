@@ -1,8 +1,9 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getBarberAvailability } from "@/lib/booking/availability";
-import { addMinutesToTime, isBookableDate, isPastInShopTimezone, toHourMinute } from "@/lib/booking/datetime";
+import { getBarberAvailability, getDayAvailability } from "@/lib/booking/availability";
+import { ANY_BARBER } from "@/lib/booking/constants";
+import { addMinutesToTime, isBookableDate, isPastInShopTimezone, toHourMinute, upcomingDays } from "@/lib/booking/datetime";
 import { generateBookingReference } from "@/lib/booking/reference";
 import { getMissingEnvVars, isDevelopment, isSupabaseConfigured, SUPABASE_ENV_VARS } from "@/lib/env";
 import {
@@ -22,7 +23,14 @@ import {
 } from "@/lib/validation";
 import { getLocale } from "@/i18n/get-locale";
 import { getDictionary, type Dictionary } from "@/i18n";
-import type { ActionResult, BarberSlotAvailability, BookingSummary, CreateBookingInput } from "@/types/booking";
+import type {
+  ActionResult,
+  BarberOption,
+  BarberSlotAvailability,
+  BookingSummary,
+  CreateBookingInput,
+  DayAvailability,
+} from "@/types/booking";
 
 function notConfiguredMessage(dict: Dictionary): string {
   const missing = getMissingEnvVars(SUPABASE_ENV_VARS);
@@ -58,10 +66,59 @@ export async function getAvailabilityAction(
   }
 }
 
+/** Every remaining start time of one day, each with its barbers' statuses (drives the time grid and barber list). */
+export async function getDayAvailabilityAction(date: string, serviceId: string): Promise<ActionResult<DayAvailability>> {
+  const dict = getDictionary(await getLocale());
+
+  if (!isValidDateString(date) || !isValidUuid(serviceId)) {
+    return { success: false, error: dict.booking.errors.invalidRequest };
+  }
+  if (!isBookableDate(date)) {
+    return { success: true, data: { date, slots: [] } };
+  }
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: notConfiguredMessage(dict) };
+  }
+
+  try {
+    return { success: true, data: await getDayAvailability(date, serviceId) };
+  } catch (error) {
+    console.error("getDayAvailabilityAction failed:", error);
+    return { success: false, error: dict.booking.errors.generic };
+  }
+}
+
+/** The first free date and time for a service in the next two weeks (shop time), or null if there is none. */
+export async function getEarliestAvailableAction(
+  serviceId: string,
+): Promise<ActionResult<{ date: string; time: string } | null>> {
+  const dict = getDictionary(await getLocale());
+
+  if (!isValidUuid(serviceId)) {
+    return { success: false, error: dict.booking.errors.invalidRequest };
+  }
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: notConfiguredMessage(dict) };
+  }
+
+  try {
+    for (const day of upcomingDays(14)) {
+      if (!day.isOpen) continue;
+      const { slots } = await getDayAvailability(day.date, serviceId);
+      const slot = slots.find((candidate) => candidate.status === "available");
+      if (slot) return { success: true, data: { date: day.date, time: slot.time } };
+    }
+    return { success: true, data: null };
+  } catch (error) {
+    console.error("getEarliestAvailableAction failed:", error);
+    return { success: false, error: dict.booking.errors.generic };
+  }
+}
+
 function validateCreateBookingInput(input: CreateBookingInput, dict: Dictionary): string | null {
   const { errors } = dict.booking;
   if (!isValidUuid(input.serviceId)) return errors.chooseService;
-  if (!isValidUuid(input.barberId)) return errors.chooseBarber;
+  if (input.barberId !== ANY_BARBER && !isValidUuid(input.barberId)) return errors.chooseBarber;
   if (!isValidDateString(input.date)) return errors.invalidDate;
   if (!isValidTimeString(input.timeSlot)) return errors.invalidTime;
   if (!isNonEmptyString(input.fullName, 200)) return errors.fullName;
@@ -71,6 +128,16 @@ function validateCreateBookingInput(input: CreateBookingInput, dict: Dictionary)
   if (!isBookableDate(input.date)) return errors.closedDay;
   if (isPastInShopTimezone(input.date, input.timeSlot)) return errors.pastTime;
   return null;
+}
+
+/** Fisher–Yates shuffle, so "any available barber" spreads bookings across the team. */
+function shuffled<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
 }
 
 export async function createBookingAction(input: CreateBookingInput): Promise<ActionResult<BookingSummary>> {
@@ -98,23 +165,27 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Ac
   }
   if (!service) return { success: false, error: dict.booking.errors.serviceUnavailable };
 
-  const { data: barber, error: barberError } = await supabase
-    .from("barbers")
-    .select("id, name, role")
-    .eq("id", input.barberId)
-    .eq("is_active", true)
-    .maybeSingle();
-  if (barberError) {
-    console.error("createBookingAction: barber lookup failed:", barberError.message);
+  // Authoritative re-check, immediately before writing. Never trust the
+  // client's earlier availability read. The list only contains active barbers.
+  let availability: BarberSlotAvailability[];
+  try {
+    availability = await getBarberAvailability(input.date, input.timeSlot, input.serviceId);
+  } catch (error) {
+    console.error("createBookingAction: availability re-check failed:", error);
     return { success: false, error: dict.booking.errors.generic };
   }
-  if (!barber) return { success: false, error: dict.booking.errors.barberUnavailable };
 
-  // Authoritative re-check, immediately before writing. Never trust the
-  // client's earlier availability read.
-  const availability = await getBarberAvailability(input.date, input.timeSlot, input.serviceId);
-  const chosenBarberStatus = availability.find((entry) => entry.barber.id === input.barberId)?.status;
-  if (chosenBarberStatus !== "available") {
+  const isAnyBarber = input.barberId === ANY_BARBER;
+  if (!isAnyBarber && !availability.some((entry) => entry.barber.id === input.barberId)) {
+    return { success: false, error: dict.booking.errors.barberUnavailable };
+  }
+
+  const availableBarbers = availability.filter((entry) => entry.status === "available").map((entry) => entry.barber);
+  // "Any available barber": try the free barbers in random order; otherwise only the chosen one.
+  const candidates: BarberOption[] = isAnyBarber
+    ? shuffled(availableBarbers)
+    : availableBarbers.filter((barber) => barber.id === input.barberId);
+  if (candidates.length === 0) {
     return { success: false, error: dict.booking.errors.slotTaken };
   }
 
@@ -134,96 +205,97 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Ac
     return { success: false, error: dict.booking.errors.generic };
   }
 
-  // Small retry loop: a booking_reference collision is astronomically
-  // unlikely (33^8 keyspace) but cheap to guard against.
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const bookingReference = generateBookingReference();
+  for (const barber of candidates) {
+    // Small retry loop: a booking_reference collision is astronomically
+    // unlikely (32^8 keyspace) but cheap to guard against.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const bookingReference = generateBookingReference();
 
-    const { data: appointment, error: insertError } = await supabase
-      .from("appointments")
-      .insert({
-        customer_id: customer.id,
-        barber_id: input.barberId,
-        service_id: input.serviceId,
-        appointment_date: input.date,
-        start_time: input.timeSlot,
-        end_time: endTime,
-        booking_reference: bookingReference,
-        customer_notes: input.notes?.trim() || null,
-      })
-      .select("booking_reference, status, appointment_date, start_time, end_time, cancelled_at")
-      .single();
+      const { data: appointment, error: insertError } = await supabase
+        .from("appointments")
+        .insert({
+          customer_id: customer.id,
+          barber_id: barber.id,
+          service_id: input.serviceId,
+          appointment_date: input.date,
+          start_time: input.timeSlot,
+          end_time: endTime,
+          booking_reference: bookingReference,
+          customer_notes: input.notes?.trim() || null,
+        })
+        .select("booking_reference, status, appointment_date, start_time, end_time, cancelled_at")
+        .single();
 
-    if (!insertError && appointment) {
-      const emailInput: BookingEmailInput = {
-        bookingReference: appointment.booking_reference,
-        customerName: input.fullName.trim(),
-        customerEmail: normalizedEmail,
-        customerPhone: input.phone.trim(),
-        serviceName: service.name,
-        servicePriceIls: service.price_ils,
-        barberName: barber.name,
-        date: appointment.appointment_date,
-        startTime: toHourMinute(appointment.start_time),
-        endTime: toHourMinute(appointment.end_time),
-        customerNotes: input.notes?.trim() || null,
-        locale,
-      };
-
-      // Never let email delivery affect the booking result — the
-      // appointment is already committed at this point. Owner and customer
-      // emails are independent: a sandbox-restricted customer send must not
-      // suppress the owner notification, or vice versa.
-      const [ownerResult, customerResult] = await Promise.all([
-        sendBookingOwnerNotificationEmail(emailInput),
-        sendBookingCustomerConfirmationEmail(emailInput),
-      ]);
-      if (!ownerResult.delivered) {
-        console.error("createBookingAction: owner notification email failed:", ownerResult.error);
-      }
-      if (!customerResult.delivered) {
-        console.error(
-          customerResult.sandboxRestricted
-            ? "createBookingAction: customer confirmation email blocked by Resend sandbox restriction (no verified domain)."
-            : `createBookingAction: customer confirmation email failed: ${customerResult.error}`,
-        );
-      }
-
-      return {
-        success: true,
-        data: {
+      if (!insertError && appointment) {
+        const emailInput: BookingEmailInput = {
           bookingReference: appointment.booking_reference,
-          status: appointment.status,
+          customerName: input.fullName.trim(),
+          customerEmail: normalizedEmail,
+          customerPhone: input.phone.trim(),
+          serviceName: service.name,
+          servicePriceIls: service.price_ils,
+          barberName: barber.name,
           date: appointment.appointment_date,
           startTime: toHourMinute(appointment.start_time),
           endTime: toHourMinute(appointment.end_time),
-          service: {
-            id: service.id,
-            name: service.name,
-            durationMinutes: service.duration_minutes,
-            priceIls: service.price_ils,
-          },
-          barber: { id: barber.id, name: barber.name, role: barber.role },
-          customerName: input.fullName.trim(),
-          customerEmail: normalizedEmail,
-          cancelledAt: appointment.cancelled_at,
-          customerEmailDelivered: customerResult.delivered,
-        },
-      };
-    }
+          customerNotes: input.notes?.trim() || null,
+          locale,
+        };
 
-    // 23505 = unique_violation (booking_reference collision) -> retry.
-    // 23P01 = exclusion_violation (a concurrent request just took this slot).
-    if (insertError?.code === "23P01") {
-      return { success: false, error: dict.booking.errors.slotTaken };
-    }
-    if (insertError?.code !== "23505") {
-      console.error("createBookingAction: insert failed:", insertError?.message);
-      return { success: false, error: dict.booking.errors.generic };
+        // Never let email delivery affect the booking result — the
+        // appointment is already committed at this point. Owner and customer
+        // emails are independent: a sandbox-restricted customer send must not
+        // suppress the owner notification, or vice versa.
+        const [ownerResult, customerResult] = await Promise.all([
+          sendBookingOwnerNotificationEmail(emailInput),
+          sendBookingCustomerConfirmationEmail(emailInput),
+        ]);
+        if (!ownerResult.delivered) {
+          console.error("createBookingAction: owner notification email failed:", ownerResult.error);
+        }
+        if (!customerResult.delivered) {
+          console.error(
+            customerResult.sandboxRestricted
+              ? "createBookingAction: customer confirmation email blocked by Resend sandbox restriction (no verified domain)."
+              : `createBookingAction: customer confirmation email failed: ${customerResult.error}`,
+          );
+        }
+
+        return {
+          success: true,
+          data: {
+            bookingReference: appointment.booking_reference,
+            status: appointment.status,
+            date: appointment.appointment_date,
+            startTime: toHourMinute(appointment.start_time),
+            endTime: toHourMinute(appointment.end_time),
+            service: {
+              id: service.id,
+              name: service.name,
+              durationMinutes: service.duration_minutes,
+              priceIls: service.price_ils,
+            },
+            barber: { id: barber.id, name: barber.name, role: barber.role },
+            customerName: input.fullName.trim(),
+            customerEmail: normalizedEmail,
+            cancelledAt: appointment.cancelled_at,
+            customerEmailDelivered: customerResult.delivered,
+          },
+        };
+      }
+
+      // 23P01 = exclusion_violation: a concurrent request just took this
+      // barber's slot -> try the next candidate barber, if any.
+      if (insertError?.code === "23P01") break;
+      // 23505 = unique_violation (booking_reference collision) -> retry.
+      if (insertError?.code !== "23505") {
+        console.error("createBookingAction: insert failed:", insertError?.message);
+        return { success: false, error: dict.booking.errors.generic };
+      }
     }
   }
 
-  return { success: false, error: dict.booking.errors.generic };
+  return { success: false, error: dict.booking.errors.slotTaken };
 }
 
 async function findAppointmentByReferenceAndEmail(reference: string, email: string) {

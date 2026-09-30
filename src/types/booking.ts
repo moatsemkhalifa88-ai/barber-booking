@@ -56,3 +56,16 @@ export interface BookingSummary {
 export type ActionResult<T> =
   | { success: true; data: T }
   | { success: false; error: string };
+
+/** One start time on a given day: its overall status plus each barber's status. */
+export interface TimeSlotAvailability {
+  time: string;
+  /** available = at least one barber free; booked = none free but at least one booked; otherwise unavailable. */
+  status: SlotAvailabilityStatus;
+  barbers: BarberSlotAvailability[];
+}
+
+export interface DayAvailability {
+  date: string;
+  slots: TimeSlotAvailability[];
+}

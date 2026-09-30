@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Button } from "@/components/ui/Button";
+import { BookServiceButton } from "@/components/booking/BookServiceButton";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Bidi } from "@/components/ui/Bidi";
 import { services } from "@/data/services";
@@ -47,9 +47,7 @@ export function Services({ dict, locale }: { dict: Dictionary; locale: Locale })
                     </bdi>
                   </span>
                   <p className="line-clamp-2 flex-1 text-[15px] leading-relaxed text-muted">{description}</p>
-                  <Button href="#booking" variant="secondary" className="mt-1 w-full">
-                    {dict.services.bookThisService}
-                  </Button>
+                  <BookServiceButton serviceName={service.name} label={dict.services.bookThisService} />
                 </div>
               </article>
             );

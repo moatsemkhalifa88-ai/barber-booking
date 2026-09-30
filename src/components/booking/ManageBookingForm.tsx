@@ -1,42 +1,55 @@
 "use client";
 
-import { useTransition } from "react";
-import { useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import { cancelBookingAction, lookupBookingAction } from "@/lib/booking/actions";
 import { Button } from "@/components/ui/Button";
 import { Bidi } from "@/components/ui/Bidi";
+import { FormField } from "@/components/ui/FormField";
+import { AlertIcon, CheckIcon, SearchIcon } from "@/components/ui/Icons";
 import { formatDate, formatPrice } from "@/lib/format";
 import { useLocale } from "@/i18n/LocaleProvider";
 import type { BookingSummary } from "@/types/booking";
 
-export function ManageBookingForm() {
+export function ManageBookingForm({ initialReference = "" }: { initialReference?: string }) {
   const { locale, dict } = useLocale();
+  const t = dict.manageBooking;
   const translateServiceName = (name: string) => dict.services.nameByEnglish[name] ?? name;
+  const translateBarberName = (name: string) => dict.barbers.nameByEnglish[name] ?? name;
 
-  const [reference, setReference] = useState("");
+  const [reference, setReference] = useState(initialReference);
   const [email, setEmail] = useState("");
   const [booking, setBooking] = useState<BookingSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cancelMessage, setCancelMessage] = useState<string | null>(null);
+  const [isConfirmingCancel, setIsConfirmingCancel] = useState(false);
 
   const [isLookingUp, startLookupTransition] = useTransition();
   const [isCancelling, startCancelTransition] = useTransition();
+  const resultRef = useRef<HTMLDivElement>(null);
+  const confirmRef = useRef<HTMLDivElement>(null);
 
   function handleLookup(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
     setCancelMessage(null);
+    setIsConfirmingCancel(false);
     setBooking(null);
 
     startLookupTransition(() => {
       lookupBookingAction(reference, email).then((result) => {
         if (result.success) {
           setBooking(result.data);
+          requestAnimationFrame(() => resultRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
         } else {
           setError(result.error);
         }
       });
     });
+  }
+
+  function askToCancel() {
+    setIsConfirmingCancel(true);
+    requestAnimationFrame(() => confirmRef.current?.focus());
   }
 
   function handleCancel() {
@@ -45,13 +58,10 @@ export function ManageBookingForm() {
 
     startCancelTransition(() => {
       cancelBookingAction(reference, email).then((result) => {
+        setIsConfirmingCancel(false);
         if (result.success) {
           setBooking(result.data);
-          setCancelMessage(
-            result.data.customerEmailDelivered === false
-              ? dict.manageBooking.cancelledMessageEmailFailed
-              : dict.manageBooking.cancelledMessage,
-          );
+          setCancelMessage(result.data.customerEmailDelivered === false ? t.cancelledMessageEmailFailed : t.cancelledMessage);
         } else {
           setError(result.error);
         }
@@ -59,110 +69,123 @@ export function ManageBookingForm() {
     });
   }
 
+  const rows: [string, React.ReactNode][] = booking
+    ? [
+        [dict.booking.serviceLabel, translateServiceName(booking.service.name)],
+        [dict.booking.barberLabel, translateBarberName(booking.barber.name)],
+        [dict.booking.dateLabel, formatDate(booking.date, locale)],
+        [dict.booking.timeLabel, <Bidi key="time">{`${booking.startTime}–${booking.endTime}`}</Bidi>],
+        [dict.booking.priceLabel, <Bidi key="price">{formatPrice(booking.service.priceIls, locale)}</Bidi>],
+      ]
+    : [];
+
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-8">
-      <form
-        onSubmit={handleLookup}
-        className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-6 sm:p-8"
-      >
-        <label className="flex flex-col gap-2 text-sm text-muted">
-          {dict.manageBooking.referenceLabel}
-          <input
-            required
-            value={reference}
-            onChange={(event) => setReference(event.target.value)}
-            placeholder={dict.manageBooking.referencePlaceholder}
-            className="field"
-          />
-        </label>
-        <label className="flex flex-col gap-2 text-sm text-muted">
-          {dict.manageBooking.emailLabel}
-          <input
-            required
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="field"
-          />
-        </label>
+    <div className="flex w-full flex-col gap-6">
+      <form onSubmit={handleLookup} className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4 shadow-card sm:p-6">
+        <FormField
+          label={t.referenceLabel}
+          helper={t.referenceHelp}
+          required
+          dir="ltr"
+          autoCapitalize="characters"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder={t.referencePlaceholder}
+          value={reference}
+          onChange={(event) => setReference(event.target.value.toUpperCase())}
+        />
+        <FormField
+          label={t.emailLabel}
+          required
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          dir="ltr"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+        />
 
-        {error ? <p className="text-sm text-error">{error}</p> : null}
+        {error ? (
+          <p role="alert" className="flex items-start gap-2 rounded-lg bg-error-soft p-3 text-sm font-semibold text-error">
+            <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
+            {error}
+          </p>
+        ) : null}
 
-        <Button type="submit" variant="primary" disabled={isLookingUp}>
-          {isLookingUp ? dict.manageBooking.lookingUp : dict.manageBooking.findBooking}
+        <Button type="submit" variant="primary" disabled={isLookingUp} loading={isLookingUp} className="w-full">
+          {isLookingUp ? null : <SearchIcon className="h-5 w-5" />}
+          {isLookingUp ? t.lookingUp : t.findBooking}
         </Button>
       </form>
 
       {booking ? (
-        <div className="flex flex-col gap-5 rounded-2xl border border-accent bg-surface-2 p-6 sm:p-8">
-          <div className="flex items-center justify-between gap-4 border-b border-border pb-4">
-            <span className="text-xs font-semibold text-accent">
-              <Bidi>{booking.bookingReference}</Bidi>
+        <div ref={resultRef} className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4 shadow-card sm:p-6">
+          <div className="flex items-center justify-between gap-3 border-b border-border pb-3">
+            <span dir="ltr" className="text-lg font-bold tracking-wider text-fg tabular-nums">
+              {booking.bookingReference}
             </span>
             <span
-              className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-                booking.status === "confirmed"
-                  ? "border-accent bg-accent-soft text-accent"
-                  : "border-border text-muted"
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[13px] font-semibold ${
+                booking.status === "confirmed" ? "bg-success-soft text-success" : "bg-surface-2 text-disabled-fg"
               }`}
             >
-              {dict.manageBooking.statusLabels[booking.status]}
+              <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
+              {t.statusLabels[booking.status]}
             </span>
           </div>
 
-          <dl className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <dt className="text-muted">{dict.booking.serviceLabel}</dt>
-              <dd className="text-fg">{translateServiceName(booking.service.name)}</dd>
-            </div>
-            <div>
-              <dt className="text-muted">{dict.booking.barberLabel}</dt>
-              <dd className="text-fg">{dict.barbers.nameByEnglish[booking.barber.name] ?? booking.barber.name}</dd>
-            </div>
-            <div>
-              <dt className="text-muted">{dict.booking.dateLabel}</dt>
-              <dd className="text-fg">
-                {formatDate(booking.date, locale)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-muted">{dict.booking.timeLabel}</dt>
-              <dd className="text-fg">
-                <Bidi>
-                  {booking.startTime}–{booking.endTime}
-                </Bidi>
-              </dd>
-            </div>
-            <div>
-              <dt className="text-muted">{dict.booking.priceLabel}</dt>
-              <dd className="text-accent">
-                <Bidi>{formatPrice(booking.service.priceIls, locale)}</Bidi>
-              </dd>
-            </div>
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-base">
+            {rows.map(([label, value]) => (
+              <div key={label} className="flex flex-col">
+                <dt className="text-sm text-muted">{label}</dt>
+                <dd className="font-semibold text-fg">{value}</dd>
+              </div>
+            ))}
           </dl>
 
-          {cancelMessage ? <p className="text-sm text-accent">{cancelMessage}</p> : null}
+          {cancelMessage ? (
+            <p role="status" className="flex items-start gap-2 rounded-lg bg-success-soft p-3 text-sm font-semibold text-success">
+              <CheckIcon className="mt-0.5 h-4 w-4 shrink-0" />
+              {cancelMessage}
+            </p>
+          ) : null}
 
-          {booking.status === "confirmed" ? (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleCancel}
-              disabled={isCancelling}
-              className="border-error text-error hover:border-error hover:text-error"
-            >
-              {isCancelling ? dict.manageBooking.cancelling : dict.manageBooking.cancelAppointment}
+          {booking.status === "confirmed" && !isConfirmingCancel ? (
+            <Button variant="danger" onClick={askToCancel} className="w-full">
+              {t.cancelAppointment}
             </Button>
-          ) : (
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button href="/#booking" variant="primary" className="flex-1">
-                {dict.manageBooking.bookAnotherAppointment}
-              </Button>
-              <Button href="/" variant="secondary" className="flex-1">
-                {dict.manageBooking.backToHomeCta}
-              </Button>
+          ) : null}
+
+          {booking.status === "confirmed" && isConfirmingCancel ? (
+            <div
+              ref={confirmRef}
+              tabIndex={-1}
+              role="group"
+              aria-labelledby="cancel-confirm-title"
+              className="flex flex-col gap-3 rounded-lg border border-error bg-error-soft p-4 outline-none"
+            >
+              <p id="cancel-confirm-title" className="text-lg font-bold text-fg">
+                {t.cancelConfirmTitle}
+              </p>
+              <p className="text-base text-fg">{t.cancelConfirmBody}</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Button variant="dangerSolid" onClick={handleCancel} disabled={isCancelling} loading={isCancelling}>
+                  {isCancelling ? t.cancelling : t.cancelConfirmYes}
+                </Button>
+                <Button variant="secondary" onClick={() => setIsConfirmingCancel(false)} disabled={isCancelling}>
+                  {t.cancelConfirmNo}
+                </Button>
+              </div>
             </div>
-          )}
+          ) : null}
+
+          {booking.status !== "confirmed" ? (
+            <Button href="/#booking" variant="primary" className="w-full">
+              {t.bookAnotherAppointment}
+            </Button>
+          ) : null}
         </div>
       ) : null}
     </div>

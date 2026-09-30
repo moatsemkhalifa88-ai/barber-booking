@@ -1,4 +1,5 @@
 import { Bidi } from "@/components/ui/Bidi";
+import { MailIcon } from "@/components/ui/Icons";
 import { nowInShopTimezone } from "@/lib/booking/datetime";
 import type { Dictionary } from "@/i18n";
 
@@ -20,6 +21,7 @@ export function Footer({ dict }: { dict: Dictionary }) {
     { label: dict.nav.barbers, href: "/#barbers" },
     { label: dict.nav.gallery, href: "/#gallery" },
     { label: dict.nav.booking, href: "/#booking" },
+    { label: dict.nav.manageBooking, href: "/manage-booking" },
   ];
 
   const dayOrder = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
@@ -33,12 +35,14 @@ export function Footer({ dict }: { dict: Dictionary }) {
             MOATSEM
           </span>
           <p className="max-w-sm text-sm leading-relaxed text-muted">{dict.footer.tagline}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-            <span className="text-fg">{dict.footer.builtBy}</span>
+          <div className="mt-2 flex flex-col gap-1">
+            <span className="text-sm font-semibold text-fg">{dict.footer.builtBy}</span>
             <a
               href={`mailto:${AUTHOR_EMAIL}`}
-              className="text-muted underline-offset-4 transition-colors duration-200 hover:text-accent hover:underline"
+              aria-label={`${dict.footer.contactLabel}: ${AUTHOR_EMAIL}`}
+              className="inline-flex min-h-11 items-center gap-2 self-start text-base font-semibold text-accent underline-offset-4 hover:underline"
             >
+              <MailIcon className="h-5 w-5 shrink-0" />
               <bdi>{AUTHOR_EMAIL}</bdi>
             </a>
           </div>
@@ -48,12 +52,12 @@ export function Footer({ dict }: { dict: Dictionary }) {
           <h3 className="text-sm font-bold text-accent">
             {dict.footer.navigate}
           </h3>
-          <ul className="flex flex-col gap-2.5">
+          <ul className="flex flex-col">
             {navLinks.map((link) => (
               <li key={link.href}>
                 <a
                   href={link.href}
-                  className="text-sm text-muted transition-colors duration-200 hover:text-accent"
+                  className="inline-flex min-h-11 items-center text-base text-muted transition-colors duration-150 hover:text-accent"
                 >
                   {link.label}
                 </a>

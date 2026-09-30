@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { BackToTopButton, MobileActionBar } from "@/components/layout/MobileActionBar";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { Button } from "@/components/ui/Button";
+import { BackIcon } from "@/components/ui/Icons";
 import { ManageBookingForm } from "@/components/booking/ManageBookingForm";
 import { getLocale } from "@/i18n/get-locale";
 import { getDictionary } from "@/i18n";
@@ -16,37 +18,41 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function ManageBookingPage() {
+export default async function ManageBookingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const locale = await getLocale();
   const dict = getDictionary(locale);
+  const { ref } = await searchParams;
+  // Pre-filled from the confirmation screen's "View or cancel" link.
+  const initialReference = typeof ref === "string" && /^MOA-[A-Z0-9]{8}$/i.test(ref) ? ref.toUpperCase() : "";
 
   return (
     <>
       <Header />
       <main className="flex-1">
-        <section className="border-b border-border bg-surface-2">
-          <div className="container-page section-y flex flex-col gap-8 lg:gap-12">
-            <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
-              <SectionHeading
-                align="start"
-                eyebrow={dict.manageBooking.eyebrow}
-                title={dict.manageBooking.title}
-                description={dict.manageBooking.description}
-              />
-              <div className="flex shrink-0 flex-col gap-3 sm:flex-row">
-                <Button href="/" variant="secondary" className="whitespace-nowrap">
-                  {dict.manageBooking.backToHome}
-                </Button>
-                <Button href="/#booking" variant="ghost" className="whitespace-nowrap">
-                  {dict.manageBooking.bookAnotherAppointmentCta}
-                </Button>
-              </div>
-            </div>
-            <ManageBookingForm />
+        <section id="manage" className="border-b border-border bg-surface-2">
+          <div className="container-page section-y flex max-w-xl flex-col gap-6">
+            <Link href="/" className="inline-flex min-h-11 items-center gap-1.5 self-start text-base font-semibold text-accent">
+              <BackIcon className="h-4 w-4" />
+              {dict.manageBooking.backToHome}
+            </Link>
+            <SectionHeading
+              as="h1"
+              align="start"
+              eyebrow={dict.manageBooking.eyebrow}
+              title={dict.manageBooking.title}
+              description={dict.manageBooking.description}
+            />
+            <ManageBookingForm initialReference={initialReference} />
           </div>
         </section>
       </main>
       <Footer dict={dict} />
+      <MobileActionBar page="manage" />
+      <BackToTopButton />
     </>
   );
 }

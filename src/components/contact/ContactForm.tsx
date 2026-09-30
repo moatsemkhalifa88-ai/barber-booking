@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
+import { FormField } from "@/components/ui/FormField";
+import { AlertIcon } from "@/components/ui/Icons";
 import { submitContactMessageAction } from "@/lib/contact/actions";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { format } from "@/i18n";
@@ -60,63 +62,57 @@ export function ContactForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-2xl border border-border bg-surface-2 p-6 sm:p-8">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4 shadow-card sm:p-6">
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-2 text-sm text-muted">
-          {dict.contact.fullName}
-          <input
-            required
-            value={fullName}
-            onChange={(event) => setFullName(event.target.value)}
-            className="field"
-          />
-        </label>
-        <label className="flex flex-col gap-2 text-sm text-muted">
-          {dict.contact.email}
-          <input
-            required
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="field"
-          />
-        </label>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-2 text-sm text-muted">
-          {dict.contact.phoneOptional}
-          <input
-            type="tel"
-            value={phone}
-            onChange={(event) => setPhone(event.target.value)}
-            className="field"
-          />
-        </label>
-        <label className="flex flex-col gap-2 text-sm text-muted">
-          {dict.contact.subject}
-          <input
-            value={subject}
-            onChange={(event) => setSubject(event.target.value)}
-            className="field"
-          />
-        </label>
-      </div>
-
-      <label className="flex flex-col gap-2 text-sm text-muted">
-        {dict.contact.message}
-        <textarea
+        <FormField
+          label={dict.contact.fullName}
           required
-          rows={4}
-          value={message}
-          onChange={(event) => setMessage(event.target.value)}
-          className="resize-none field"
+          autoComplete="name"
+          value={fullName}
+          onChange={(event) => setFullName(event.target.value)}
         />
-      </label>
+        <FormField
+          label={dict.contact.email}
+          required
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          dir="ltr"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+        />
+        <FormField
+          label={dict.contact.phoneOptional}
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          dir="ltr"
+          placeholder={dict.contact.phonePlaceholder}
+          value={phone}
+          onChange={(event) => setPhone(event.target.value)}
+        />
+        <FormField label={dict.contact.subject} value={subject} onChange={(event) => setSubject(event.target.value)} />
+      </div>
 
-      {error ? <p className="text-sm text-error">{error}</p> : null}
+      <FormField
+        multiline
+        label={dict.contact.message}
+        required
+        rows={4}
+        value={message}
+        onChange={(event) => setMessage(event.target.value)}
+      />
 
-      <Button type="submit" variant="primary" disabled={isSubmitting} className="self-start">
+      {error ? (
+        <p role="alert" className="flex items-start gap-2 rounded-lg bg-error-soft p-3 text-sm font-semibold text-error">
+          <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
+          {error}
+        </p>
+      ) : null}
+
+      <Button type="submit" variant="primary" disabled={isSubmitting} loading={isSubmitting} className="w-full sm:w-auto sm:self-start">
         {isSubmitting ? dict.contact.sending : dict.contact.send}
       </Button>
     </form>

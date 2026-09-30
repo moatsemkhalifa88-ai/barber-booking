@@ -30,6 +30,8 @@ export const en = {
     languageLabel: "Language",
     english: "EN",
     hebrew: "עב",
+    backToTop: "Back to top",
+    quickActionsLabel: "Quick actions",
   },
 
   logo: {
@@ -196,6 +198,23 @@ export const en = {
     stepChooseTime: "Choose a time",
     stepChooseBarber: "Choose a barber",
     stepYourDetails: "Your details",
+    stepCounter: "Step {current} of {total}",
+    stepChooseDateTime: "Choose a day and time",
+    summaryPrompt: "Choose a service to start",
+    earliestAvailable: "Earliest available",
+    searchingEarliest: "Finding the earliest time…",
+    noEarliest: "No free times in the next two weeks.",
+    noSlotsForDay: "No free times on this day. Try another day or the earliest available time.",
+    anyBarber: "Any available barber",
+    anyBarberHint: "We'll book you with a barber who is free at this time.",
+    copy: "Copy",
+    copied: "Copied",
+    copyAria: "Copy booking reference",
+    addToCalendar: "Add to Calendar",
+    goToManage: "View or cancel",
+    bookAnother: "Book Another",
+    calendarTitle: "{service} at MOATSEM",
+    calendarDescription: "Barber: {barber}. Booking reference: {reference}.",
     selectServiceGroup: "Choose a service",
     selectDayGroup: "Choose a day",
     selectTimeGroup: "Choose a time",
@@ -279,6 +298,11 @@ export const en = {
       "Your appointment was cancelled, and the time is available again. We couldn't send a cancellation email, but the cancellation is final.",
     bookAnotherAppointment: "Book a New Appointment",
     backToHomeCta: "Back to Home",
+    referenceHelp: "It's on your confirmation, e.g. MOA-7K4P9X2Q.",
+    cancelConfirmTitle: "Cancel this appointment?",
+    cancelConfirmBody: "The time will be released to other clients, and this can't be undone.",
+    cancelConfirmYes: "Yes, cancel it",
+    cancelConfirmNo: "No, keep it",
   },
 
   footer: {
@@ -290,6 +314,7 @@ export const en = {
     photoCreditBy: "by",
     otherPhotosCredit: "Other photos: Unsplash License and public domain.",
     rightsReserved: "All rights reserved.",
+    contactLabel: "Contact",
   },
 
   email: {

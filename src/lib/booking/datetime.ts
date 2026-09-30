@@ -101,3 +101,19 @@ export function upcomingDays(count: number, now: Date = new Date()): UpcomingDay
 export function toHourMinute(time: string): string {
   return time.slice(0, 5);
 }
+
+/**
+ * Converts a shop wall-clock time ("YYYY-MM-DD" + "HH:mm", Asia/Jerusalem) to
+ * the matching UTC instant, handling Israel's daylight-saving offset.
+ */
+export function shopWallTimeToUtc(dateString: string, time: string): Date {
+  const [year, month, day] = dateString.split("-").map(Number);
+  const [hours, minutes] = time.split(":").map(Number);
+  const asIfUtc = Date.UTC(year, month - 1, day, hours, minutes);
+  // How far the shop's clock is ahead of UTC at (roughly) that moment.
+  const shop = nowInShopTimezone(new Date(asIfUtc));
+  const [shopY, shopM, shopD] = shop.date.split("-").map(Number);
+  const [shopH, shopMin] = shop.time.split(":").map(Number);
+  const offset = Date.UTC(shopY, shopM - 1, shopD, shopH, shopMin) - asIfUtc;
+  return new Date(asIfUtc - offset);
+}

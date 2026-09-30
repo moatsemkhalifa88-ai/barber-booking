@@ -1,5 +1,6 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { BackToTopButton, MobileActionBar } from "@/components/layout/MobileActionBar";
 import { Hero } from "@/components/home/Hero";
 import { About } from "@/components/home/About";
 import { Services } from "@/components/home/Services";
@@ -45,6 +46,8 @@ export default async function Home() {
         <FinalCTA dict={dict} />
       </main>
       <Footer dict={dict} />
+      <MobileActionBar page="home" />
+      <BackToTopButton />
     </>
   );
 }

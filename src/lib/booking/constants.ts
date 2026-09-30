@@ -21,3 +21,6 @@ export const TIME_SLOTS = [
 
 export const SHOP_OPEN_TIME = "12:00";
 export const SHOP_CLOSE_TIME = "22:00";
+
+/** Sent as `barberId` when the customer picks "Any available barber"; the server assigns one. */
+export const ANY_BARBER = "any";

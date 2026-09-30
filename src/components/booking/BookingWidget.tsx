@@ -1,121 +1,260 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/Button";
 import { Bidi } from "@/components/ui/Bidi";
-import { createBookingAction, getAvailabilityAction } from "@/lib/booking/actions";
+import { FormField } from "@/components/ui/FormField";
+import { AlertIcon, BackIcon, BoltIcon, CalendarIcon, CheckIcon, CopyIcon, ForwardIcon, UsersIcon } from "@/components/ui/Icons";
+import { createBookingAction, getDayAvailabilityAction, getEarliestAvailableAction } from "@/lib/booking/actions";
 import { FALLBACK_BARBERS } from "@/lib/booking/fallback-data";
-import { TIME_SLOTS } from "@/lib/booking/constants";
-import { isBookableDate, upcomingDays } from "@/lib/booking/datetime";
+import { ANY_BARBER, TIME_SLOTS } from "@/lib/booking/constants";
+import { isPastInShopTimezone, upcomingDays } from "@/lib/booking/datetime";
 import { formatDate, formatDateChip, formatPrice } from "@/lib/format";
+import { isNonEmptyString, isValidEmail, isValidPhone } from "@/lib/validation";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { format } from "@/i18n";
-import type { BarberSlotAvailability, BookingSummary, ServiceOption } from "@/types/booking";
+import type { BookingSummary, DayAvailability, ServiceOption, TimeSlotAvailability } from "@/types/booking";
 
 interface BookingWidgetProps {
   services: ServiceOption[];
   isBookingConfigured: boolean;
 }
 
+/** Fired by "Book this service" buttons elsewhere on the page (see BookServiceButton). */
+export const BOOK_SERVICE_EVENT = "moatsem:book-service";
+export type BookServiceEventDetail = { serviceName: string };
+
 const NOT_CONFIGURED_MESSAGE_DEV =
   "Development notice: this is a UI preview only — either Supabase env vars are missing (set NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, and SUPABASE_SERVICE_ROLE_KEY in .env.local) or the services table doesn't match the app's expected schema yet (check for pending migrations). See the server console for the exact error.";
 
-type Step = "select" | "details" | "confirmed";
+const TOTAL_STEPS = 4;
+type Step = 1 | 2 | 3 | 4;
+type DetailField = "fullName" | "phone" | "email" | "notes";
+type Details = Record<DetailField, string>;
+const DETAIL_FIELDS: DetailField[] = ["fullName", "phone", "email", "notes"];
+
+const chipBase =
+  "flex cursor-pointer flex-col items-center justify-center rounded-sm border text-center transition-colors duration-150 disabled:cursor-not-allowed";
+const chipIdle = "border-border-strong bg-surface text-fg hover:border-fg";
+const chipSelected = "border-primary bg-primary text-on-primary";
+const chipDisabled = "border-transparent bg-surface-2 text-disabled-fg";
+
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
 
 export function BookingWidget({ services, isBookingConfigured }: BookingWidgetProps) {
   const { locale, dict } = useLocale();
-  // Shop-time (Asia/Jerusalem) calendar, identical on the UTC server render and in the browser.
-  const bookableDates = useMemo(
-    () =>
-      upcomingDays(14)
-        .filter((day) => day.isOpen)
-        .map((day) => {
-          const chip = formatDateChip(day.date, locale);
-          return { value: day.date, weekday: chip.weekday, label: chip.day };
-        }),
-    [locale],
-  );
+  const t = dict.booking;
   const isDev = process.env.NODE_ENV === "development";
 
-  const [serviceId, setServiceId] = useState<string>(services[0]?.id ?? "");
-  const [date, setDate] = useState<string>(bookableDates[0]?.value ?? "");
-  const [timeSlot, setTimeSlot] = useState<string>(TIME_SLOTS[4]);
+  const translateServiceName = (name: string) => dict.services.nameByEnglish[name] ?? name;
+  const translateBarberName = (name: string) => dict.barbers.nameByEnglish[name] ?? name;
+  const translateBarberRole = (role: string) => dict.barbers.roleByEnglish[role] ?? role;
+
+  // Next 14 calendar days in shop time (Asia/Jerusalem) — identical on the server render and in the browser.
+  const days = useMemo(
+    () => upcomingDays(14).map((day) => ({ ...day, ...formatDateChip(day.date, locale) })),
+    [locale],
+  );
+
+  const [step, setStep] = useState<Step>(1);
+  const [serviceId, setServiceId] = useState<string | null>(null);
+  const [date, setDate] = useState<string>(() => days.find((day) => day.isOpen)?.date ?? days[0].date);
+  const [time, setTime] = useState<string | null>(null);
   const [barberId, setBarberId] = useState<string | null>(null);
 
-  const [availability, setAvailability] = useState<BarberSlotAvailability[] | null>(null);
-  const [isLoadingAvailability, startAvailabilityTransition] = useTransition();
-  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
+  const [dayCache, setDayCache] = useState<Record<string, { data?: DayAvailability; error?: string }>>({});
+  const [, startDayTransition] = useTransition();
+  const [isSearchingEarliest, startEarliestTransition] = useTransition();
+  const [earliestMessage, setEarliestMessage] = useState<string | null>(null);
 
-  const [step, setStep] = useState<Step>("select");
-  const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [notes, setNotes] = useState("");
-
+  const [details, setDetails] = useState<Details>({ fullName: "", phone: "", email: "", notes: "" });
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<DetailField, string>>>({});
   const [isSubmitting, startSubmitTransition] = useTransition();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<BookingSummary | null>(null);
 
-  const translateServiceName = (name: string) => dict.services.nameByEnglish[name] ?? name;
-  const translateBarberRole = (role: string) => dict.barbers.roleByEnglish[role] ?? role;
-  const translateBarberName = (name: string) => dict.barbers.nameByEnglish[name] ?? name;
+  const sectionRef = useRef<HTMLElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const shouldRevealRef = useRef(false);
 
-  const selectedService = services.find((service) => service.id === serviceId);
+  const selectedService = services.find((service) => service.id === serviceId) ?? null;
+  const dayKey = serviceId ? `${serviceId}|${date}` : null;
 
-  // Reset the chosen barber whenever the service/date/time selection
-  // changes, following React's recommended "adjust state during render"
-  // pattern instead of an effect (see react.dev/learn/you-might-not-need-an-effect).
-  const selectionKey = `${serviceId}|${date}|${timeSlot}`;
-  const [previousSelectionKey, setPreviousSelectionKey] = useState(selectionKey);
-  if (selectionKey !== previousSelectionKey) {
-    setPreviousSelectionKey(selectionKey);
+  // ---------------------------------------------------------------------------
+  // Availability for the selected day (fetched once per service + day).
+  // ---------------------------------------------------------------------------
+
+  const fallbackDay = useMemo<DayAvailability>(
+    () => ({
+      date,
+      slots: TIME_SLOTS.filter((slot) => !isPastInShopTimezone(date, slot)).map((slot) => ({
+        time: slot,
+        status: "available" as const,
+        barbers: FALLBACK_BARBERS.map((barber) => ({ barber, status: "available" as const })),
+      })),
+    }),
+    [date],
+  );
+
+  const isClosedDay = !days.find((day) => day.date === date)?.isOpen;
+  const cached = dayKey ? dayCache[dayKey] : undefined;
+  const dayData: DayAvailability | undefined = isClosedDay
+    ? { date, slots: [] }
+    : isBookingConfigured
+      ? cached?.data
+      : fallbackDay;
+  const dayError = isBookingConfigured ? cached?.error : undefined;
+  const isDayLoading = step >= 2 && !isClosedDay && !dayData && !dayError;
+
+  useEffect(() => {
+    if (!isBookingConfigured || step < 2 || !serviceId || !dayKey || isClosedDay || dayCache[dayKey]) return;
+    startDayTransition(() => {
+      getDayAvailabilityAction(date, serviceId).then((result) => {
+        setDayCache((previous) => ({
+          ...previous,
+          [dayKey]: result.success ? { data: result.data } : { error: result.error },
+        }));
+      });
+    });
+  }, [isBookingConfigured, step, serviceId, date, dayKey, isClosedDay, dayCache]);
+
+  const selectedSlot: TimeSlotAvailability | undefined = dayData?.slots.find((slot) => slot.time === time);
+  const barberOptions = selectedSlot?.barbers ?? [];
+  const isAnyBarberAvailable = barberOptions.some((entry) => entry.status === "available");
+
+  // ---------------------------------------------------------------------------
+  // Navigation between steps: scroll the flow into view and focus the new heading.
+  // ---------------------------------------------------------------------------
+
+  const goToStep = useCallback((next: Step) => {
+    shouldRevealRef.current = true;
+    setStep(next);
+  }, []);
+
+  useEffect(() => {
+    if (!shouldRevealRef.current) return;
+    shouldRevealRef.current = false;
+    sectionRef.current?.scrollIntoView({ block: "start", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+    headingRef.current?.focus({ preventScroll: true });
+  }, [step, confirmation]);
+
+  // "Book this service" buttons elsewhere on the page pre-select a service and jump to step 2.
+  useEffect(() => {
+    function handleBookService(event: Event) {
+      const { serviceName } = (event as CustomEvent<BookServiceEventDetail>).detail;
+      const service = services.find((candidate) => candidate.name === serviceName);
+      if (!service) return;
+      setConfirmation(null);
+      setServiceId(service.id);
+      setTime(null);
+      setBarberId(null);
+      setEarliestMessage(null);
+      goToStep(2);
+    }
+    window.addEventListener(BOOK_SERVICE_EVENT, handleBookService);
+    return () => window.removeEventListener(BOOK_SERVICE_EVENT, handleBookService);
+  }, [services, goToStep]);
+
+  // ---------------------------------------------------------------------------
+  // Selections.
+  // ---------------------------------------------------------------------------
+
+  function chooseService(id: string) {
+    setServiceId(id);
+    setTime(null);
+    setBarberId(null);
+    setEarliestMessage(null);
+  }
+
+  function chooseDate(next: string) {
+    setDate(next);
+    setTime(null);
+    setBarberId(null);
+    setEarliestMessage(null);
+  }
+
+  function chooseTime(next: string) {
+    setTime(next);
     setBarberId(null);
   }
 
-  // No backend to check against yet: show the real barber roster as a pure,
-  // synchronous preview so every step of the flow remains usable — no fetch
-  // needed, so this stays out of the effect below entirely. Only the final
-  // submit is blocked (see handleReviewSubmit).
-  const fallbackAvailability = useMemo(
-    () => FALLBACK_BARBERS.map((barber) => ({ barber, status: "available" as const })),
-    [],
-  );
-
-  useEffect(() => {
-    if (!isBookingConfigured) return;
-    if (!serviceId || !date || !timeSlot) return;
-
-    startAvailabilityTransition(() => {
-      getAvailabilityAction(date, timeSlot, serviceId).then((result) => {
-        if (result.success) {
-          setAvailability(result.data);
-          setAvailabilityError(null);
-        } else {
-          setAvailability([]);
-          setAvailabilityError(result.error);
-        }
-      });
-    });
-  }, [serviceId, date, timeSlot, isBookingConfigured]);
-
-  const displayAvailability = (isBookingConfigured ? availability : fallbackAvailability) ?? [];
-  const isAvailabilityPending = isLoadingAvailability || (isBookingConfigured && availability === null);
-  const selectedBarber = displayAvailability.find((entry) => entry.barber.id === barberId)?.barber;
-
-  function handleReviewSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    setSubmitError(null);
+  function findEarliest() {
+    if (!serviceId) return;
+    setEarliestMessage(null);
 
     if (!isBookingConfigured) {
-      setSubmitError(isDev ? NOT_CONFIGURED_MESSAGE_DEV : dict.booking.notConfiguredProd);
+      const day = days.find((candidate) => candidate.isOpen && TIME_SLOTS.some((slot) => !isPastInShopTimezone(candidate.date, slot)));
+      if (day) {
+        chooseDate(day.date);
+        setTime(TIME_SLOTS.find((slot) => !isPastInShopTimezone(day.date, slot)) ?? null);
+      }
       return;
     }
 
-    if (!barberId || !serviceId || !date || !timeSlot) {
-      setSubmitError(dict.booking.errors.completeAllSteps);
+    startEarliestTransition(() => {
+      getEarliestAvailableAction(serviceId).then((result) => {
+        if (result.success && result.data) {
+          setDate(result.data.date);
+          setTime(result.data.time);
+          setBarberId(null);
+          document.getElementById(`day-${result.data.date}`)?.scrollIntoView({ block: "nearest", inline: "center" });
+        } else {
+          setEarliestMessage(result.success ? t.noEarliest : result.error);
+        }
+      });
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Details form.
+  // ---------------------------------------------------------------------------
+
+  function validateField(field: DetailField, value: string): string | undefined {
+    if (field === "fullName" && !isNonEmptyString(value, 200)) return t.errors.fullName;
+    if (field === "phone" && !isValidPhone(value)) return t.errors.phone;
+    if (field === "email" && !isValidEmail(value)) return t.errors.email;
+    if (field === "notes" && value && !isNonEmptyString(value, 1000)) return t.errors.notesTooLong;
+    return undefined;
+  }
+
+  function updateDetail(field: DetailField, value: string) {
+    setDetails((previous) => ({ ...previous, [field]: value }));
+    // Clear an existing error as soon as the value becomes valid; new errors wait for blur/submit.
+    if (fieldErrors[field] && !validateField(field, value)) {
+      setFieldErrors((previous) => ({ ...previous, [field]: undefined }));
+    }
+  }
+
+  function blurDetail(field: DetailField) {
+    if (field !== "notes" && !details[field]) return; // don't nag about fields not filled in yet
+    setFieldErrors((previous) => ({ ...previous, [field]: validateField(field, details[field]) }));
+  }
+
+  function submitBooking() {
+    setSubmitError(null);
+    const errors: Partial<Record<DetailField, string>> = {};
+    for (const field of DETAIL_FIELDS) {
+      const error = validateField(field, details[field]);
+      if (error) errors[field] = error;
+    }
+    setFieldErrors(errors);
+    const firstInvalid = DETAIL_FIELDS.find((field) => errors[field]);
+    if (firstInvalid) {
+      document.getElementById(`booking-${firstInvalid}`)?.focus();
+      return;
+    }
+
+    if (!isBookingConfigured) {
+      setSubmitError(isDev ? NOT_CONFIGURED_MESSAGE_DEV : t.notConfiguredProd);
+      return;
+    }
+    if (!serviceId || !time || !barberId) {
+      setSubmitError(t.errors.completeAllSteps);
       return;
     }
 
@@ -124,364 +263,535 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
         serviceId,
         barberId,
         date,
-        timeSlot,
-        fullName,
-        phone,
-        email,
-        notes: notes || undefined,
+        timeSlot: time,
+        fullName: details.fullName,
+        phone: details.phone,
+        email: details.email,
+        notes: details.notes || undefined,
       }).then((result) => {
         if (result.success) {
+          shouldRevealRef.current = true;
           setConfirmation(result.data);
-          setStep("confirmed");
         } else {
           setSubmitError(result.error);
+          // The slot may have just been taken: refetch this day the next time it is shown.
+          if (dayKey) {
+            setDayCache((previous) => {
+              const next = { ...previous };
+              delete next[dayKey];
+              return next;
+            });
+          }
         }
       });
     });
   }
 
-  if (step === "confirmed" && confirmation) {
+  function startOver() {
+    setConfirmation(null);
+    setServiceId(null);
+    setTime(null);
+    setBarberId(null);
+    setDetails({ fullName: "", phone: "", email: "", notes: "" });
+    setFieldErrors({});
+    setSubmitError(null);
+    setDayCache({});
+    goToStep(1);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Step bar (summary, price, back / next).
+  // ---------------------------------------------------------------------------
+
+  const canContinue =
+    step === 1 ? !!serviceId : step === 2 ? selectedSlot?.status === "available" : step === 3 ? !!barberId : true;
+  const selectedBarber = barberOptions.find((entry) => entry.barber.id === barberId)?.barber;
+  const barberSummary = barberId === ANY_BARBER ? t.anyBarber : selectedBarber ? translateBarberName(selectedBarber.name) : null;
+  // Second line of the step bar: short date, time and barber once chosen ("יום ד׳ 30 בספט׳ · 14:00 · כל ספר פנוי").
+  const selectedDay = days.find((day) => day.date === date);
+  const whenParts = [
+    step >= 2 && selectedDay ? `${selectedDay.weekday} ${selectedDay.day}` : null,
+    step >= 2 ? time : null,
+    step >= 3 ? barberSummary : null,
+  ].filter(Boolean);
+
+  const stepTitles: Record<Step, string> = {
+    1: t.stepChooseService,
+    2: t.stepChooseDateTime,
+    3: t.stepChooseBarber,
+    4: t.stepYourDetails,
+  };
+
+  // ---------------------------------------------------------------------------
+  // Render: confirmation.
+  // ---------------------------------------------------------------------------
+
+  if (confirmation) {
     return (
-      <section id="booking" className="section-y border-b border-border bg-surface-2">
-        <div className="container-page flex max-w-3xl flex-col items-center gap-6 text-center">
-          <span className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-accent bg-accent-soft text-2xl text-accent">
-            ✓
-          </span>
-          <h2 className="font-display text-3xl text-fg sm:text-4xl">{dict.booking.confirmedHeading}</h2>
-          <p className="text-muted">
-            {format(dict.booking.confirmedBody, { name: confirmation.customerName })}
-          </p>
-
-          <div className="mt-2 flex flex-col gap-4 rounded-2xl border border-accent bg-surface p-6 text-start sm:p-8">
-            <div className="flex items-center justify-between gap-4 border-b border-border pb-4">
-              <span className="text-xs font-semibold text-accent">
-                {dict.booking.referenceLabel}
-              </span>
-              <span className="font-display text-xl text-accent">
-                <Bidi>{confirmation.bookingReference}</Bidi>
-              </span>
-            </div>
-            <dl className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <dt className="text-muted">{dict.booking.serviceLabel}</dt>
-                <dd className="text-fg">{translateServiceName(confirmation.service.name)}</dd>
-              </div>
-              <div>
-                <dt className="text-muted">{dict.booking.barberLabel}</dt>
-                <dd className="text-fg">{translateBarberName(confirmation.barber.name)}</dd>
-              </div>
-              <div>
-                <dt className="text-muted">{dict.booking.dateLabel}</dt>
-                <dd className="text-fg">
-                  {formatDate(confirmation.date, locale)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted">{dict.booking.timeLabel}</dt>
-                <dd className="text-fg">
-                  <Bidi>
-                    {confirmation.startTime}–{confirmation.endTime}
-                  </Bidi>
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted">{dict.booking.priceLabel}</dt>
-                <dd className="text-accent">
-                  <Bidi>{formatPrice(confirmation.service.priceIls, locale)}</Bidi>
-                </dd>
-              </div>
-            </dl>
-          </div>
-
-          <p className="max-w-md rounded-lg border border-accent bg-accent-soft px-4 py-3 text-xs text-accent">
-            {dict.booking.demoEmailNotice}
-          </p>
-
-          <p className="text-xs text-muted">
-            {dict.booking.manageBookingHint}{" "}
-            <a href="/manage-booking" className="text-accent underline underline-offset-4">
-              {dict.booking.manageBookingLinkText}
-            </a>{" "}
-            {dict.booking.manageBookingHintSuffix}
-          </p>
+      <section ref={sectionRef} id="booking" className="section-y border-b border-border bg-surface-2">
+        <div className="container-page flex max-w-2xl flex-col gap-5">
+          <BookingConfirmation confirmation={confirmation} headingRef={headingRef} onStartOver={startOver} />
         </div>
       </section>
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Render: steps.
+  // ---------------------------------------------------------------------------
+
   return (
-    <section id="booking" className="section-y border-b border-border bg-surface-2">
-      <div className="container-page flex flex-col gap-8 lg:gap-12">
-        <SectionHeading
-          eyebrow={dict.booking.eyebrow}
-          title={dict.booking.title}
-          description={dict.booking.description}
-        />
+    <section ref={sectionRef} id="booking" className="section-y border-b border-border bg-surface-2">
+      <div className="container-page flex flex-col gap-6 lg:gap-10">
+        <SectionHeading eyebrow={t.eyebrow} title={t.title} description={t.description} />
 
         {!isBookingConfigured && isDev ? (
-          <p className="mx-auto max-w-2xl rounded-xl border border-accent bg-accent-soft px-4 py-3 text-center text-xs text-accent">
+          <p className="mx-auto max-w-2xl rounded-lg border border-accent bg-accent-soft px-4 py-3 text-center text-sm text-fg">
             {NOT_CONFIGURED_MESSAGE_DEV}
           </p>
         ) : null}
 
-        {step === "select" ? (
-          <div className="grid gap-8 rounded-3xl border border-border bg-surface p-6 sm:p-8 lg:grid-cols-[1fr_1.3fr] lg:p-10">
-            <div className="flex flex-col gap-8">
-              <div className="flex flex-col gap-3">
-                <h3 className="text-xs font-semibold text-accent">
-                  {dict.booking.stepChooseService}
-                </h3>
-                <div role="group" aria-label={dict.booking.selectServiceGroup} className="flex flex-col gap-2">
-                  {services.map((service) => {
-                    const isSelected = service.id === serviceId;
-                    return (
-                      <button
-                        key={service.id}
-                        type="button"
-                        aria-pressed={isSelected}
-                        onClick={() => setServiceId(service.id)}
-                        className={`flex items-center justify-between rounded-xl border px-4 py-3 text-start text-sm font-medium transition-colors duration-200 ${
-                          isSelected
-                            ? "border-accent bg-accent-soft text-fg"
-                            : "border-border text-muted hover:border-accent hover:text-accent"
+        <div className="mx-auto w-full max-w-3xl rounded-lg border border-border bg-surface shadow-card">
+          {/* Progress */}
+          <div className="flex flex-col gap-3 border-b border-border p-4 sm:p-6">
+            <p className="text-sm font-semibold text-muted">
+              {format(t.stepCounter, { current: String(step), total: String(TOTAL_STEPS) })}
+            </p>
+            <div className="flex gap-1.5" aria-hidden="true">
+              {Array.from({ length: TOTAL_STEPS }, (_, index) => (
+                <span
+                  key={index}
+                  className={`h-1.5 flex-1 rounded-full transition-colors duration-200 ${index < step ? "bg-primary" : "bg-surface-2"}`}
+                />
+              ))}
+            </div>
+            <h3 ref={headingRef} tabIndex={-1} className="font-display text-2xl font-bold text-fg outline-none">
+              {stepTitles[step]}
+            </h3>
+          </div>
+
+          <div className="p-4 sm:p-6">
+            {step === 1 ? (
+              <div role="group" aria-label={t.selectServiceGroup} className="flex flex-col gap-3">
+                {services.map((service) => {
+                  const isSelected = service.id === serviceId;
+                  return (
+                    <button
+                      key={service.id}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => chooseService(service.id)}
+                      className={`flex min-h-16 w-full cursor-pointer items-center gap-3 rounded-lg border-2 p-4 text-start transition-colors duration-150 ${
+                        isSelected ? "border-accent bg-accent-soft" : "border-border bg-surface hover:border-border-strong"
+                      }`}
+                    >
+                      <span
+                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${
+                          isSelected ? "border-accent bg-accent text-on-primary" : "border-border-strong"
                         }`}
                       >
-                        <span>{translateServiceName(service.name)}</span>
-                        <span className="flex items-center gap-2 text-xs text-muted">
+                        {isSelected ? <CheckIcon className="h-4 w-4" /> : null}
+                      </span>
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="text-lg font-bold text-fg">{translateServiceName(service.name)}</span>
+                        <span className="text-sm text-muted">
                           <bdi>
                             {service.durationMinutes} {dict.services.minutesSuffix}
                           </bdi>
-                          <span className="text-accent">
-                            <Bidi>{formatPrice(service.priceIls, locale)}</Bidi>
-                          </span>
                         </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                      </span>
+                      <span className="text-lg font-bold whitespace-nowrap text-accent tabular-nums">
+                        <Bidi>{formatPrice(service.priceIls, locale)}</Bidi>
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-
-              <div className="flex flex-col gap-3">
-                <h3 className="text-xs font-semibold text-accent">
-                  {dict.booking.stepChooseDay}
-                </h3>
-                <div role="group" aria-label={dict.booking.selectDayGroup} className="flex flex-wrap gap-2">
-                  {bookableDates.map((day) => {
-                    const isSelected = day.value === date;
-                    return (
-                      <button
-                        key={day.value}
-                        type="button"
-                        aria-pressed={isSelected}
-                        onClick={() => setDate(day.value)}
-                        className={`flex min-w-16 flex-col items-center rounded-xl border px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                          isSelected
-                            ? "border-accent bg-primary text-on-primary"
-                            : "border-border text-muted hover:border-accent hover:text-accent"
-                        }`}
-                      >
-                        <span className="text-xs opacity-80">{day.weekday}</span>
-                        <span>{day.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <h3 className="text-xs font-semibold text-accent">
-                  {dict.booking.stepChooseTime}
-                </h3>
-                <div role="group" aria-label={dict.booking.selectTimeGroup} className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-3">
-                  {TIME_SLOTS.map((slot) => {
-                    const isSelected = slot === timeSlot;
-                    return (
-                      <button
-                        key={slot}
-                        type="button"
-                        aria-pressed={isSelected}
-                        onClick={() => setTimeSlot(slot)}
-                        className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
-                          isSelected
-                            ? "border-accent bg-primary text-on-primary"
-                            : "border-border text-muted hover:border-accent hover:text-accent"
-                        }`}
-                      >
-                        <Bidi>{slot}</Bidi>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-5 rounded-2xl border border-border bg-surface-2 p-6 sm:p-7">
-              <div className="flex flex-col gap-1 border-b border-border pb-5">
-                <h3 className="text-xs font-semibold text-accent">
-                  {dict.booking.stepChooseBarber}
-                </h3>
-                <p className="font-display text-lg text-fg">
-                  {formatDate(date, locale)} · <bdi dir="ltr">{timeSlot}</bdi>
-                </p>
-              </div>
-
-              {isAvailabilityPending ? (
-                <p className="text-sm text-muted">{dict.booking.checkingAvailability}</p>
-              ) : availabilityError ? (
-                <p className="text-sm text-error">{availabilityError}</p>
-              ) : !isBookableDate(date) ? (
-                <p className="text-sm text-muted">{dict.booking.closedDayMessage}</p>
-              ) : (
-                <ul className="flex flex-col gap-3">
-                  {displayAvailability.map(({ barber, status }) => {
-                    const isBookable = status === "available";
-                    const isSelected = barberId === barber.id;
-                    const statusLabel = dict.booking.statusLabels[status];
-
-                    return (
-                      <li key={barber.id}>
-                        <button
-                          type="button"
-                          disabled={!isBookable}
-                          aria-pressed={isSelected}
-                          aria-label={`${translateBarberName(barber.name)}, ${statusLabel}`}
-                          onClick={() => setBarberId(barber.id)}
-                          className={`flex w-full items-center justify-between gap-4 rounded-xl border px-4 py-3.5 text-start transition-colors duration-200 ${
-                            !isBookable
-                              ? "border-border bg-surface-2"
-                              : isSelected
-                                ? "border-accent bg-accent-soft"
-                                : "border-border bg-surface hover:border-accent"
-                          } disabled:cursor-not-allowed`}
-                        >
-                          <span className="flex items-center gap-3">
-                            <span
-                              className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-border bg-surface-2"
-                              aria-hidden="true"
-                            >
-                              {barber.imageUrl ? (
-                                <Image src={barber.imageUrl} alt="" fill sizes="40px" className="object-cover" />
-                              ) : null}
-                            </span>
-                            <span className="flex flex-col">
-                              <span className={`text-sm font-semibold ${isBookable ? "text-fg" : "text-muted"}`}>
-                                {translateBarberName(barber.name)}
-                              </span>
-                              <span className="text-xs text-muted">{translateBarberRole(barber.role)}</span>
-                            </span>
-                          </span>
-                          <StatusBadge status={status} label={statusLabel} />
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-
-              <Button
-                type="button"
-                variant="primary"
-                className="mt-2 w-full disabled:opacity-40"
-                disabled={!barberId}
-                onClick={() => setStep("details")}
-              >
-                {dict.booking.continue}
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <form
-            onSubmit={handleReviewSubmit}
-            className="mx-auto flex w-full max-w-2xl flex-col gap-6 rounded-3xl border border-border bg-surface p-6 sm:p-8 lg:p-10"
-          >
-            <div className="flex flex-col gap-1 border-b border-border pb-5">
-              <h3 className="text-xs font-semibold text-accent">
-                {dict.booking.stepYourDetails}
-              </h3>
-              <p className="font-display text-lg text-fg">
-                {translateServiceName(selectedService?.name ?? "")} {dict.booking.withConnector} {translateBarberName(selectedBarber?.name ?? "")}{" "}
-                — {formatDate(date, locale)} {dict.booking.atConnector} <bdi dir="ltr">{timeSlot}</bdi>
-              </p>
-              {selectedService ? (
-                <p className="text-sm text-accent">
-                  <Bidi>{formatPrice(selectedService.priceIls, locale)}</Bidi>
-                </p>
-              ) : null}
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="flex flex-col gap-2 text-sm text-muted">
-                {dict.booking.fullNameLabel}
-                <input
-                  required
-                  value={fullName}
-                  onChange={(event) => setFullName(event.target.value)}
-                  className="field"
-                />
-              </label>
-              <label className="flex flex-col gap-2 text-sm text-muted">
-                {dict.booking.phoneLabel}
-                <input
-                  required
-                  type="tel"
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  className="field"
-                />
-              </label>
-            </div>
-
-            <label className="flex flex-col gap-2 text-sm text-muted">
-              {dict.booking.emailLabel}
-              <input
-                required
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className="field"
-              />
-            </label>
-
-            <label className="flex flex-col gap-2 text-sm text-muted">
-              {dict.booking.notesLabel}
-              <textarea
-                rows={3}
-                value={notes}
-                onChange={(event) => setNotes(event.target.value)}
-                className="resize-none field"
-              />
-            </label>
-
-            {!isBookingConfigured ? (
-              <p className="rounded-lg border border-accent bg-accent-soft px-4 py-3 text-sm text-accent">
-                {isDev ? NOT_CONFIGURED_MESSAGE_DEV : dict.booking.notConfiguredProd}
-              </p>
             ) : null}
 
-            {submitError ? <p className="text-sm text-error">{submitError}</p> : null}
+            {step === 2 ? (
+              <div className="flex flex-col gap-5">
+                {/* Date strip: swipeable on phones; closed days stay visible but disabled and labelled. */}
+                <div role="group" aria-label={t.selectDayGroup} className="swipe-row [--gutter:0px] sm:flex-wrap">
+                  {days.map((day) => {
+                    const isSelected = day.date === date;
+                    return (
+                      <button
+                        key={day.date}
+                        id={`day-${day.date}`}
+                        type="button"
+                        disabled={!day.isOpen}
+                        aria-pressed={isSelected}
+                        onClick={() => chooseDate(day.date)}
+                        className={`${chipBase} h-[68px] w-[76px] gap-0.5 ${
+                          !day.isOpen ? chipDisabled : isSelected ? chipSelected : chipIdle
+                        }`}
+                      >
+                        <span className="text-sm font-bold">{day.weekday}</span>
+                        <span className="text-[13px]">{day.isOpen ? day.day : dict.workingHours.closedLabel}</span>
+                      </button>
+                    );
+                  })}
+                </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button
-                type="button"
-                variant="secondary"
-                className="sm:w-40"
-                onClick={() => setStep("select")}
-                disabled={isSubmitting}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-base font-bold text-fg">{formatDate(date, locale)}</p>
+                  <Button variant="ghost" onClick={findEarliest} disabled={isSearchingEarliest}>
+                    <BoltIcon className="h-4 w-4" />
+                    {isSearchingEarliest ? t.searchingEarliest : t.earliestAvailable}
+                  </Button>
+                </div>
+                {earliestMessage ? (
+                  <p role="status" className="text-sm font-semibold text-muted">
+                    {earliestMessage}
+                  </p>
+                ) : null}
+
+                {/* Time grid */}
+                {isDayLoading ? (
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-5" aria-busy="true" aria-label={t.checkingAvailability}>
+                    {Array.from({ length: 6 }, (_, index) => (
+                      <span key={index} className="h-14 animate-pulse rounded-sm bg-surface-2" />
+                    ))}
+                  </div>
+                ) : dayError ? (
+                  <p role="alert" className="flex items-center gap-2 text-sm font-semibold text-error">
+                    <AlertIcon className="h-4 w-4" />
+                    {dayError}
+                  </p>
+                ) : isClosedDay ? (
+                  <p className="text-base text-muted">{t.closedDayMessage}</p>
+                ) : !dayData?.slots.some((slot) => slot.status === "available") ? (
+                  <p className="rounded-lg bg-surface-2 p-4 text-base text-fg">{t.noSlotsForDay}</p>
+                ) : (
+                  <div role="group" aria-label={t.selectTimeGroup} className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                    {dayData.slots.map((slot) => {
+                      const isSelected = slot.time === time;
+                      const isAvailable = slot.status === "available";
+                      return (
+                        <button
+                          key={slot.time}
+                          type="button"
+                          disabled={!isAvailable}
+                          aria-pressed={isSelected}
+                          onClick={() => chooseTime(slot.time)}
+                          className={`${chipBase} h-14 ${!isAvailable ? chipDisabled : isSelected ? chipSelected : chipIdle}`}
+                        >
+                          <span className={`text-base font-bold tabular-nums ${!isAvailable ? "line-through decoration-1" : ""}`}>
+                            <Bidi>{slot.time}</Bidi>
+                          </span>
+                          {!isAvailable ? <span className="text-xs font-semibold">{t.statusLabels[slot.status]}</span> : null}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : null}
+
+            {step === 3 ? (
+              <ul aria-label={t.selectBarberGroup} className="flex flex-col gap-3">
+                <li>
+                  <button
+                    type="button"
+                    disabled={!isAnyBarberAvailable}
+                    aria-pressed={barberId === ANY_BARBER}
+                    onClick={() => setBarberId(ANY_BARBER)}
+                    className={`flex w-full cursor-pointer items-center gap-3 rounded-lg border-2 p-3 text-start transition-colors duration-150 disabled:cursor-not-allowed ${
+                      barberId === ANY_BARBER ? "border-accent bg-accent-soft" : "border-border bg-surface hover:border-border-strong"
+                    }`}
+                  >
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                      <UsersIcon className="h-6 w-6" />
+                    </span>
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="text-base font-bold text-fg">{t.anyBarber}</span>
+                      <span className="text-sm text-muted">{t.anyBarberHint}</span>
+                    </span>
+                    {barberId === ANY_BARBER ? <CheckIcon className="h-5 w-5 shrink-0 text-accent" /> : null}
+                  </button>
+                </li>
+                {barberOptions.map(({ barber, status }) => {
+                  const isBookable = status === "available";
+                  const isSelected = barberId === barber.id;
+                  return (
+                    <li key={barber.id}>
+                      <button
+                        type="button"
+                        disabled={!isBookable}
+                        aria-pressed={isSelected}
+                        onClick={() => setBarberId(barber.id)}
+                        className={`flex w-full cursor-pointer items-center gap-3 rounded-lg border-2 p-3 text-start transition-colors duration-150 disabled:cursor-not-allowed ${
+                          !isBookable
+                            ? "border-transparent bg-surface-2"
+                            : isSelected
+                              ? "border-accent bg-accent-soft"
+                              : "border-border bg-surface hover:border-border-strong"
+                        }`}
+                      >
+                        <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-surface-2">
+                          {barber.imageUrl ? (
+                            <Image
+                              src={barber.imageUrl}
+                              alt=""
+                              fill
+                              sizes="48px"
+                              className={`object-cover ${isBookable ? "" : "opacity-60 grayscale"}`}
+                            />
+                          ) : null}
+                        </span>
+                        <span className="flex min-w-0 flex-1 flex-col">
+                          <span className={`text-base font-bold ${isBookable ? "text-fg" : "text-disabled-fg"}`}>
+                            {translateBarberName(barber.name)}
+                          </span>
+                          <span className="text-sm text-muted">{translateBarberRole(barber.role)}</span>
+                        </span>
+                        <StatusBadge status={status} label={t.statusLabels[status]} />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
+
+            {step === 4 ? (
+              <form
+                id="booking-details"
+                noValidate
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  submitBooking();
+                }}
+                className="grid gap-4 sm:grid-cols-2"
               >
-                {dict.booking.back}
+                <FormField
+                  id="booking-fullName"
+                  label={t.fullNameLabel}
+                  autoComplete="name"
+                  enterKeyHint="next"
+                  required
+                  value={details.fullName}
+                  error={fieldErrors.fullName}
+                  onChange={(event) => updateDetail("fullName", event.target.value)}
+                  onBlur={() => blurDetail("fullName")}
+                  className="sm:col-span-2"
+                />
+                <FormField
+                  id="booking-phone"
+                  label={t.phoneLabel}
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  dir="ltr"
+                  enterKeyHint="next"
+                  placeholder={t.phonePlaceholder}
+                  required
+                  value={details.phone}
+                  error={fieldErrors.phone}
+                  onChange={(event) => updateDetail("phone", event.target.value)}
+                  onBlur={() => blurDetail("phone")}
+                />
+                <FormField
+                  id="booking-email"
+                  label={t.emailLabel}
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  dir="ltr"
+                  enterKeyHint="next"
+                  required
+                  value={details.email}
+                  error={fieldErrors.email}
+                  onChange={(event) => updateDetail("email", event.target.value)}
+                  onBlur={() => blurDetail("email")}
+                />
+                <FormField
+                  id="booking-notes"
+                  multiline
+                  rows={3}
+                  label={t.notesLabel}
+                  value={details.notes}
+                  error={fieldErrors.notes}
+                  onChange={(event) => updateDetail("notes", event.target.value)}
+                  onBlur={() => blurDetail("notes")}
+                  className="sm:col-span-2"
+                />
+                {!isBookingConfigured ? (
+                  <p className="rounded-lg border border-accent bg-accent-soft px-4 py-3 text-sm text-fg sm:col-span-2">
+                    {isDev ? NOT_CONFIGURED_MESSAGE_DEV : t.notConfiguredProd}
+                  </p>
+                ) : null}
+              </form>
+            ) : null}
+
+            {submitError && step === 4 ? (
+              <p role="alert" className="mt-4 flex items-start gap-2 rounded-lg bg-error-soft p-3 text-sm font-semibold text-error">
+                <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                {submitError}
+              </p>
+            ) : null}
+          </div>
+
+          {/* Step bar: sticks to the bottom of the screen on phones while the booking flow is in view; static on desktop. */}
+          <div className="sticky bottom-0 z-30 flex items-center gap-3 rounded-b-lg border-t border-border bg-surface/95 px-4 pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] shadow-raised backdrop-blur-md sm:px-6 lg:static lg:pb-3 lg:shadow-none">
+            {step > 1 ? (
+              <button
+                type="button"
+                onClick={() => goToStep((step - 1) as Step)}
+                disabled={isSubmitting}
+                aria-label={t.back}
+                className="inline-flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border-strong bg-surface text-fg hover:bg-surface-2 disabled:opacity-45"
+              >
+                <BackIcon />
+              </button>
+            ) : null}
+            <div className="flex min-w-0 flex-1 flex-col">
+              {selectedService ? (
+                <>
+                  {/* The price never truncates; a long service name does. */}
+                  <span className="flex min-w-0 items-baseline gap-1.5 text-base font-bold text-fg">
+                    <span className="truncate">{translateServiceName(selectedService.name)}</span>
+                    <span className="shrink-0 tabular-nums">
+                      · <Bidi>{formatPrice(selectedService.priceIls, locale)}</Bidi>
+                    </span>
+                  </span>
+                  {whenParts.length ? <span className="line-clamp-2 text-sm leading-snug text-muted">{whenParts.join(" · ")}</span> : null}
+                </>
+              ) : (
+                <span className="text-sm text-muted">{t.summaryPrompt}</span>
+              )}
+            </div>
+            {step < 4 ? (
+              <Button onClick={() => goToStep((step + 1) as Step)} disabled={!canContinue} className="shrink-0 px-5">
+                {t.continue}
+                <ForwardIcon className="hidden h-4 w-4 sm:block" />
               </Button>
+            ) : (
               <Button
                 type="submit"
-                variant="primary"
-                className="flex-1 disabled:opacity-40"
+                form="booking-details"
                 disabled={isSubmitting || !isBookingConfigured}
+                loading={isSubmitting}
+                className="shrink-0 px-5"
               >
-                {isSubmitting ? dict.booking.confirming : dict.booking.confirmBooking}
+                {isSubmitting ? t.confirming : t.confirmBooking}
               </Button>
-            </div>
-          </form>
-        )}
+            )}
+          </div>
+        </div>
       </div>
     </section>
+  );
+}
+
+// -----------------------------------------------------------------------------
+// Confirmation screen.
+// -----------------------------------------------------------------------------
+
+function BookingConfirmation({
+  confirmation,
+  headingRef,
+  onStartOver,
+}: {
+  confirmation: BookingSummary;
+  headingRef: React.RefObject<HTMLHeadingElement | null>;
+  onStartOver: () => void;
+}) {
+  const { locale, dict } = useLocale();
+  const t = dict.booking;
+  const [copied, setCopied] = useState(false);
+
+  const serviceName = dict.services.nameByEnglish[confirmation.service.name] ?? confirmation.service.name;
+  const barberName = dict.barbers.nameByEnglish[confirmation.barber.name] ?? confirmation.barber.name;
+  const calendarHref = `/calendar?${new URLSearchParams({
+    date: confirmation.date,
+    start: confirmation.startTime,
+    end: confirmation.endTime,
+    ref: confirmation.bookingReference,
+    service: confirmation.service.name,
+    barber: confirmation.barber.name,
+    lang: locale,
+  })}`;
+  const manageHref = `/manage-booking?${new URLSearchParams({ ref: confirmation.bookingReference })}`;
+
+  async function copyReference() {
+    try {
+      await navigator.clipboard.writeText(confirmation.bookingReference);
+    } catch {
+      // Older browsers / insecure contexts: fall back to a temporary text field.
+      const field = document.createElement("textarea");
+      field.value = confirmation.bookingReference;
+      field.setAttribute("readonly", "");
+      field.style.position = "fixed";
+      field.style.opacity = "0";
+      document.body.appendChild(field);
+      field.select();
+      document.execCommand("copy");
+      field.remove();
+    }
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 2500);
+  }
+
+  const rows: [string, React.ReactNode][] = [
+    [t.serviceLabel, serviceName],
+    [t.barberLabel, barberName],
+    [t.dateLabel, formatDate(confirmation.date, locale)],
+    [t.timeLabel, <Bidi key="time">{`${confirmation.startTime}–${confirmation.endTime}`}</Bidi>],
+    [t.priceLabel, <Bidi key="price">{formatPrice(confirmation.service.priceIls, locale)}</Bidi>],
+  ];
+
+  return (
+    <div className="flex flex-col items-center gap-5 text-center">
+      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-success-soft text-success">
+        <CheckIcon className="h-8 w-8" />
+      </span>
+      <div role="status" className="flex flex-col gap-2">
+        <h2 ref={headingRef} tabIndex={-1} className="font-display text-3xl font-bold text-fg outline-none sm:text-4xl">
+          {t.confirmedHeading}
+        </h2>
+        <p className="text-base text-muted">{format(t.confirmedBody, { name: confirmation.customerName })}</p>
+      </div>
+
+      <div className="flex w-full flex-col gap-4 rounded-lg border border-border bg-surface p-4 text-start shadow-card sm:p-6">
+        <div className="flex flex-col items-center gap-3 rounded-md bg-accent-soft p-4">
+          <span className="text-sm font-semibold text-accent">{t.referenceLabel}</span>
+          <span dir="ltr" className="font-display text-3xl font-bold tracking-wider text-fg tabular-nums sm:text-4xl">
+            {confirmation.bookingReference}
+          </span>
+          <Button variant="secondary" onClick={copyReference} aria-label={t.copyAria} className="min-w-32">
+            {copied ? <CheckIcon className="h-4 w-4 text-success" /> : <CopyIcon className="h-4 w-4" />}
+            <span aria-live="polite">{copied ? t.copied : t.copy}</span>
+          </Button>
+        </div>
+
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-base">
+          {rows.map(([label, value]) => (
+            <div key={label} className="flex flex-col">
+              <dt className="text-sm text-muted">{label}</dt>
+              <dd className="font-semibold text-fg">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+
+      <div className="grid w-full gap-3 sm:grid-cols-2">
+        <Button href={calendarHref} variant="primary">
+          <CalendarIcon className="h-5 w-5" />
+          {t.addToCalendar}
+        </Button>
+        <Button href={manageHref} variant="secondary">
+          {t.goToManage}
+        </Button>
+      </div>
+
+      <p className="w-full rounded-lg bg-surface p-3 text-sm text-muted">{t.demoEmailNotice}</p>
+
+      <Button variant="ghost" onClick={onStartOver}>
+        {t.bookAnother}
+      </Button>
+    </div>
   );
 }

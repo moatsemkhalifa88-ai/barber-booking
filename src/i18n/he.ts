@@ -31,6 +31,8 @@ export const he: Dictionary = {
     languageLabel: "שפה",
     english: "EN",
     hebrew: "עב",
+    backToTop: "חזרה למעלה",
+    quickActionsLabel: "גישה מהירה",
   },
 
   logo: {
@@ -195,6 +197,23 @@ export const he: Dictionary = {
     stepChooseTime: "בחרו שעה",
     stepChooseBarber: "בחרו ספר",
     stepYourDetails: "הפרטים שלכם",
+    stepCounter: "שלב {current} מתוך {total}",
+    stepChooseDateTime: "בחרו יום ושעה",
+    summaryPrompt: "בחרו שירות כדי להתחיל",
+    earliestAvailable: "התור הפנוי הקרוב",
+    searchingEarliest: "מחפשים את התור הקרוב…",
+    noEarliest: "לא מצאנו תור פנוי בשבועיים הקרובים.",
+    noSlotsForDay: "אין תורים פנויים ביום הזה. נסו יום אחר או את התור הפנוי הקרוב.",
+    anyBarber: "כל ספר פנוי",
+    anyBarberHint: "נשבץ אתכם אצל ספר שפנוי בשעה הזו.",
+    copy: "העתקה",
+    copied: "הועתק",
+    copyAria: "העתקת מספר ההזמנה",
+    addToCalendar: "הוספה ליומן",
+    goToManage: "צפייה בתור או ביטול",
+    bookAnother: "הזמנת תור חדש",
+    calendarTitle: "{service} ב-MOATSEM",
+    calendarDescription: "ספר: {barber}. מספר הזמנה: {reference}.",
     selectServiceGroup: "בחירת שירות",
     selectDayGroup: "בחירת יום",
     selectTimeGroup: "בחירת שעה",
@@ -278,6 +297,11 @@ export const he: Dictionary = {
       "התור בוטל, והשעה פנויה שוב. לא הצלחנו לשלוח אימייל על הביטול, אבל הביטול סופי.",
     bookAnotherAppointment: "הזמנת תור חדש",
     backToHomeCta: "חזרה לדף הבית",
+    referenceHelp: "מופיע באישור ההזמנה, למשל MOA-7K4P9X2Q.",
+    cancelConfirmTitle: "לבטל את התור?",
+    cancelConfirmBody: "השעה תתפנה ללקוחות אחרים, והפעולה סופית.",
+    cancelConfirmYes: "כן, לבטל את התור",
+    cancelConfirmNo: "לא, להשאיר את התור",
   },
 
   footer: {
@@ -289,6 +313,7 @@ export const he: Dictionary = {
     photoCreditBy: "מאת",
     otherPhotosCredit: "שאר התמונות: רישיון Unsplash ונחלת הכלל.",
     rightsReserved: "כל הזכויות שמורות.",
+    contactLabel: "יצירת קשר",
   },
 
   email: {
