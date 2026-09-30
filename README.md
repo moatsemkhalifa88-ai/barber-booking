@@ -8,7 +8,7 @@ A bilingual (English / Hebrew) barbershop website with real-time online booking,
 
 ## Screenshots
 
-Hebrew (the default language, right-to-left). Phones at 390 px, desktop at 1440 px.
+Phones at 390 px in Hebrew, desktop at 1440 px in English.
 
 | Home (mobile) | Booking flow | Confirmation |
 |:---:|:---:|:---:|
@@ -16,7 +16,9 @@ Hebrew (the default language, right-to-left). Phones at 390 px, desktop at 1440 
 
 **Desktop home**
 
-<img src="docs/screenshots/desktop-home-he.png" alt="Desktop home page in Hebrew: headline and buttons beside the photo" width="900">
+<img src="docs/screenshots/desktop-home-en.png" alt="Desktop home page in English: headline and buttons beside the photo" width="900">
+
+Hebrew (RTL) by default, with a full English version.
 
 ## Features
 
