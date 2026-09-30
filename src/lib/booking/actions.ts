@@ -166,6 +166,7 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Ac
         date: appointment.appointment_date,
         startTime: toHourMinute(appointment.start_time),
         endTime: toHourMinute(appointment.end_time),
+        customerNotes: input.notes?.trim() || null,
         locale,
       };
 

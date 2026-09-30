@@ -1,45 +1,140 @@
 @import "tailwindcss";
 
+/* "Warm Paper" design tokens — see DESIGN_SYSTEM.md for roles and contrast. */
 :root {
-  --color-ink: #09090a;
-  --color-charcoal: #14130f;
-  --color-charcoal-light: #1d1a15;
-  --color-cream: #f4ecdb;
-  --color-muted: #a89d89;
-  --color-gold: #c9a24b;
-  --color-gold-light: #e9cd90;
-  --color-line: #2c2820;
+  --color-canvas: #faf7f2;
+  --color-surface: #ffffff;
+  --color-surface-2: #f3eee6;
+  --color-fg: #1c1917;
+  --color-muted: #57534e;
+  --color-disabled-fg: #6b655d;
+  --color-accent: #8a5a0b;
+  --color-accent-soft: #f6eddc;
+  --color-gold: #e3c47e;
+  --color-primary: #1c1917;
+  --color-primary-hover: #2e2a26;
+  --color-on-primary: #ffffff;
+  --color-border: #e4ddd2;
+  --color-border-strong: #8c857b;
+  --color-error: #b42318;
+  --color-error-soft: #fef1ef;
+  --color-success: #15703a;
+  --color-success-soft: #ecf7f0;
+  --color-focus: #8a5a0b;
+
+  --header-height: 56px;
+  --bottom-bar-height: 72px;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --header-height: 72px;
+  }
 }
 
 @theme inline {
-  --color-ink: var(--color-ink);
-  --color-charcoal: var(--color-charcoal);
-  --color-charcoal-light: var(--color-charcoal-light);
-  --color-cream: var(--color-cream);
+  --color-canvas: var(--color-canvas);
+  --color-surface: var(--color-surface);
+  --color-surface-2: var(--color-surface-2);
+  --color-fg: var(--color-fg);
   --color-muted: var(--color-muted);
+  --color-disabled-fg: var(--color-disabled-fg);
+  --color-accent: var(--color-accent);
+  --color-accent-soft: var(--color-accent-soft);
   --color-gold: var(--color-gold);
-  --color-gold-light: var(--color-gold-light);
-  --color-line: var(--color-line);
-  --font-sans: var(--font-geist-sans);
-  --font-display: var(--font-playfair);
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-on-primary: var(--color-on-primary);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-error: var(--color-error);
+  --color-error-soft: var(--color-error-soft);
+  --color-success: var(--color-success);
+  --color-success-soft: var(--color-success-soft);
+  --color-focus: var(--color-focus);
+
+  --font-sans: var(--font-assistant);
+  --font-display: var(--font-frank-ruhl);
+
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+
+  --shadow-card: 0 1px 2px rgb(28 25 23 / 0.06), 0 8px 24px rgb(28 25 23 / 0.06);
+  --shadow-raised: 0 2px 4px rgb(28 25 23 / 0.08), 0 16px 40px rgb(28 25 23 / 0.1);
 }
 
 html {
   scroll-behavior: smooth;
+  /* Keeps anchored sections and focused fields clear of the sticky header and bottom bar. */
+  scroll-padding-top: calc(var(--header-height) + 12px);
+  scroll-padding-bottom: calc(var(--bottom-bar-height) + env(safe-area-inset-bottom) + 12px);
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--color-ink);
-  color: var(--color-cream);
+  background: var(--color-canvas);
+  color: var(--color-fg);
+  overflow-x: clip;
 }
 
 ::selection {
-  background: var(--color-gold);
-  color: var(--color-ink);
+  background: var(--color-accent-soft);
+  color: var(--color-fg);
 }
 
 *:focus-visible {
-  outline: 2px solid var(--color-gold);
-  outline-offset: 3px;
-  border-radius: 2px;
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@layer components {
+  /* Text inputs and textareas — see "Form fields" in DESIGN_SYSTEM.md. */
+  .field {
+    min-height: 48px;
+    width: 100%;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    padding: 10px 14px;
+    font-size: 16px;
+    line-height: 1.4;
+    color: var(--color-fg);
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .field::placeholder {
+    color: var(--color-disabled-fg);
+  }
+
+  .field:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 1px;
+    border-color: var(--color-focus);
+  }
+
+  .field[aria-invalid="true"] {
+    border-color: var(--color-error);
+  }
 }

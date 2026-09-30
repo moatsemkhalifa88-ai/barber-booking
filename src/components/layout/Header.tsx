@@ -21,8 +21,8 @@ export function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-line/80 bg-ink/85 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 sm:px-8 lg:px-12">
+    <header className="sticky top-0 z-50 border-b border-border bg-surface/90 backdrop-blur-md">
+      <div className="mx-auto flex h-[var(--header-height)] max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-12">
         <Logo />
 
         <nav
@@ -33,7 +33,7 @@ export function Header() {
             <a
               key={link.href}
               href={link.href}
-              className="whitespace-nowrap text-sm font-medium tracking-wide text-muted transition-colors duration-200 hover:text-gold-light"
+              className="whitespace-nowrap text-[15px] font-semibold text-fg transition-colors duration-150 hover:text-accent"
             >
               {link.label}
             </a>
@@ -42,14 +42,16 @@ export function Header() {
 
         <div className="hidden items-center gap-4 lg:flex">
           <LanguageSwitcher />
-          <Button href="/#booking" variant="primary" className="px-6 py-3 text-xs">
+          <Button href="/#booking" variant="primary">
             {dict.nav.bookNow}
           </Button>
         </div>
 
+        <div className="flex items-center gap-2 lg:hidden">
+          <LanguageSwitcher />
         <button
           type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line text-cream lg:hidden"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-md border border-border-strong text-fg"
           aria-expanded={isMenuOpen}
           aria-controls="mobile-menu"
           aria-label={isMenuOpen ? dict.nav.closeMenu : dict.nav.openMenu}
@@ -77,11 +79,12 @@ export function Header() {
             )}
           </svg>
         </button>
+        </div>
       </div>
 
       <div
         id="mobile-menu"
-        className={`grid overflow-hidden border-t border-line/80 bg-ink transition-[grid-template-rows] duration-300 ease-out lg:hidden ${
+        className={`grid overflow-hidden border-t border-border bg-surface transition-[grid-template-rows] duration-300 ease-out lg:hidden ${
           isMenuOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
         }`}
       >
@@ -92,7 +95,7 @@ export function Header() {
                 <a
                   href={link.href}
                   onClick={() => setIsMenuOpen(false)}
-                  className="block rounded-lg px-3 py-3 text-base font-medium text-cream transition-colors hover:bg-charcoal hover:text-gold-light"
+                  className="block rounded-lg px-3 py-3 text-base font-medium text-fg transition-colors hover:bg-surface-2 hover:text-accent"
                 >
                   {link.label}
                 </a>

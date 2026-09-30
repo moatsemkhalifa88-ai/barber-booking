@@ -1,7 +1,13 @@
 import { Resend } from "resend";
-import { formatPrice } from "@/lib/format";
-import { getEmailStrings, translateServiceNameForLocale } from "@/i18n/email";
-import { defaultLocale, type Locale } from "@/i18n/config";
+import { formatDateLong, formatInstant, formatPrice } from "@/lib/format";
+import {
+  getEmailStrings,
+  OWNER_EMAIL_LOCALE,
+  translateBarberNameForLocale,
+  translateServiceNameForLocale,
+} from "@/i18n/email";
+import { defaultLocale, dirForLocale, type Locale } from "@/i18n/config";
+import { format } from "@/i18n";
 
 export interface EmailDeliveryResult {
   delivered: boolean;
@@ -24,7 +30,8 @@ export interface BookingEmailInput {
   date: string;
   startTime: string;
   endTime: string;
-  /** Customer's selected UI locale, used for the customer-facing emails only (owner emails stay English). */
+  customerNotes?: string | null;
+  /** Customer's selected UI locale, used for the customer-facing emails only (owner emails are always Hebrew). */
   locale?: Locale;
 }
 
@@ -37,26 +44,34 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function renderEmailHtml(
-  title: string,
-  rows: [string, string][],
-  bodyHtml?: string,
-  direction: "ltr" | "rtl" = "ltr",
-): string {
+/** Wraps LTR values (times, references, emails, phones) so they keep their order inside RTL text. */
+function ltr(value: string): string {
+  return `<bdi dir="ltr">${escapeHtml(value)}</bdi>`;
+}
+
+type Row = [label: string, valueHtml: string];
+
+function renderEmailHtml(locale: Locale, title: string, rows: Row[], bodyHtml?: string): string {
+  const strings = getEmailStrings(locale);
+  const dir = dirForLocale(locale);
+  const align = dir === "rtl" ? "right" : "left";
+
   const rowsHtml = rows
     .map(
-      ([label, value]) =>
-        `<tr><td style="padding:6px 0; color:#666;">${escapeHtml(label)}</td><td style="padding:6px 0;">${escapeHtml(value)}</td></tr>`,
+      ([label, valueHtml]) =>
+        `<tr><td style="padding:8px 0; color:#57534e; width:38%; vertical-align:top;">${escapeHtml(label)}</td><td style="padding:8px 0; color:#1c1917;">${valueHtml}</td></tr>`,
     )
     .join("");
 
-  const alignStyle = direction === "rtl" ? "text-align:right;" : "";
-
   return `
-    <div dir="${direction}" style="font-family: sans-serif; max-width: 560px; margin: 0 auto; ${alignStyle}">
-      <h2 style="color:#111;">${escapeHtml(title)}</h2>
-      <table style="width:100%; border-collapse: collapse;"><tbody>${rowsHtml}</tbody></table>
-      ${bodyHtml ?? ""}
+    <div dir="${dir}" lang="${locale}" style="background:#faf7f2; padding:24px 12px; font-family: Arial, Helvetica, sans-serif; text-align:${align};">
+      <div style="max-width:560px; margin:0 auto; background:#ffffff; border:1px solid #e4ddd2; border-radius:12px; padding:24px;">
+        <p style="margin:0 0 4px; color:#8a5a0b; font-size:13px; font-weight:bold;">MOATSEM</p>
+        <h1 style="margin:0 0 16px; color:#1c1917; font-size:22px; line-height:1.3;">${escapeHtml(title)}</h1>
+        <table style="width:100%; border-collapse:collapse; font-size:15px; line-height:1.5;"><tbody>${rowsHtml}</tbody></table>
+        ${bodyHtml ?? ""}
+      </div>
+      <p style="max-width:560px; margin:12px auto 0; color:#57534e; font-size:12px;">${escapeHtml(strings.footer)}</p>
     </div>
   `.trim();
 }
@@ -121,7 +136,7 @@ function requireReceiverEmail(): string | null {
 }
 
 // ---------------------------------------------------------------------------
-// Contact form
+// Contact form (owner only)
 // ---------------------------------------------------------------------------
 
 interface ContactNotificationInput {
@@ -137,93 +152,90 @@ export async function sendContactNotificationEmail(input: ContactNotificationInp
   const toEmail = requireReceiverEmail();
   if (!toEmail) return { delivered: false, error: "not_configured" };
 
-  const submittedAtLabel = input.submittedAt.toLocaleString("en-US", {
-    timeZone: "Asia/Jerusalem",
-    dateStyle: "full",
-    timeStyle: "short",
-  });
+  const locale = OWNER_EMAIL_LOCALE;
+  const strings = getEmailStrings(locale);
+  const subject = input.subject?.trim() || strings.owner.contactDefaultSubject;
 
   const html = renderEmailHtml(
-    "New contact message — MOATSEM",
+    locale,
+    strings.owner.contactTitle,
     [
-      ["Name", input.fullName],
-      ["Email", input.email],
-      ["Phone", input.phone ?? "—"],
-      ["Subject", input.subject ?? "—"],
-      ["Submitted", `${submittedAtLabel} (Asia/Jerusalem)`],
+      [strings.contactLabels.name, escapeHtml(input.fullName)],
+      [strings.contactLabels.email, ltr(input.email)],
+      [strings.contactLabels.phone, input.phone ? ltr(input.phone) : strings.empty],
+      [strings.contactLabels.subject, input.subject ? escapeHtml(input.subject) : strings.empty],
+      [
+        strings.contactLabels.submitted,
+        `${escapeHtml(formatInstant(input.submittedAt, locale))} ${escapeHtml(strings.israelTime)}`,
+      ],
     ],
-    `<p style="color:#666; margin-top:16px;">Message</p>
-     <p style="white-space: pre-wrap; border-left: 3px solid #c9a24b; padding-left: 12px;">${escapeHtml(input.message)}</p>`,
+    `<p style="color:#57534e; margin:16px 0 4px;">${escapeHtml(strings.contactLabels.message)}</p>
+     <p style="white-space:pre-wrap; margin:0; border-inline-start:3px solid #8a5a0b; padding-inline-start:12px; color:#1c1917;">${escapeHtml(input.message)}</p>`,
   );
 
   return sendEmail({
     to: toEmail,
     replyTo: input.email,
-    subject: `New contact message: ${input.subject?.trim() || "Website inquiry"}`,
+    subject: format(strings.owner.contactSubject, { subject }),
     html,
   });
 }
 
 // ---------------------------------------------------------------------------
-// Booking created
+// Booking emails
 // ---------------------------------------------------------------------------
 
-function bookingRows(
-  input: BookingEmailInput,
-  labels: ReturnType<typeof getEmailStrings>["labels"],
-  serviceName: string,
-  extra?: [string, string][],
-): [string, string][] {
+function bookingRows(input: BookingEmailInput, locale: Locale, extra: Row[] = []): Row[] {
+  const { labels } = getEmailStrings(locale);
   return [
-    [labels.bookingReference, input.bookingReference],
-    [labels.customer, input.customerName],
-    [labels.email, input.customerEmail],
-    [labels.phone, input.customerPhone],
-    [labels.service, `${serviceName} (${formatPrice(input.servicePriceIls)})`],
-    [labels.barber, input.barberName],
-    [labels.date, input.date],
-    [labels.time, `${input.startTime}–${input.endTime}`],
-    ...(extra ?? []),
+    [labels.bookingReference, `<strong>${ltr(input.bookingReference)}</strong>`],
+    [labels.service, escapeHtml(translateServiceNameForLocale(input.serviceName, locale))],
+    [labels.barber, escapeHtml(translateBarberNameForLocale(input.barberName, locale))],
+    [labels.date, escapeHtml(formatDateLong(input.date, locale))],
+    [labels.time, ltr(`${input.startTime}–${input.endTime}`)],
+    [labels.price, ltr(formatPrice(input.servicePriceIls, locale))],
+    [labels.customer, escapeHtml(input.customerName)],
+    [labels.email, ltr(input.customerEmail)],
+    [labels.phone, ltr(input.customerPhone)],
+    ...extra,
   ];
+}
+
+function subjectValues(input: BookingEmailInput, locale: Locale) {
+  return { name: input.customerName, date: formatDateLong(input.date, locale), time: input.startTime };
 }
 
 export async function sendBookingOwnerNotificationEmail(input: BookingEmailInput): Promise<EmailDeliveryResult> {
   const toEmail = requireReceiverEmail();
   if (!toEmail) return { delivered: false, error: "not_configured" };
 
-  const labels = getEmailStrings(defaultLocale).labels;
-  const html = renderEmailHtml("New booking — MOATSEM", bookingRows(input, labels, input.serviceName));
+  const locale = OWNER_EMAIL_LOCALE;
+  const strings = getEmailStrings(locale);
+  const notesRow: Row[] = input.customerNotes ? [[strings.labels.notes, escapeHtml(input.customerNotes)]] : [];
 
   return sendEmail({
     to: toEmail,
     replyTo: input.customerEmail,
-    subject: `New booking: ${input.customerName} — ${input.date} ${input.startTime}`,
-    html,
+    subject: format(strings.owner.newBookingSubject, subjectValues(input, locale)),
+    html: renderEmailHtml(locale, strings.owner.newBookingTitle, bookingRows(input, locale, notesRow)),
   });
 }
 
 export async function sendBookingCustomerConfirmationEmail(input: BookingEmailInput): Promise<EmailDeliveryResult> {
   const locale = input.locale ?? defaultLocale;
   const strings = getEmailStrings(locale);
-  const serviceName = translateServiceNameForLocale(input.serviceName, locale);
-
-  const html = renderEmailHtml(
-    strings.confirmedTitle,
-    bookingRows(input, strings.labels, serviceName),
-    `<p style="color:#666; margin-top:16px;">${escapeHtml(strings.confirmedNote)}</p>`,
-    strings.dir,
-  );
 
   return sendEmail({
     to: input.customerEmail,
-    subject: strings.confirmedSubject(input.date, input.startTime),
-    html,
+    subject: format(strings.customer.confirmedSubject, subjectValues(input, locale)),
+    html: renderEmailHtml(
+      locale,
+      strings.customer.confirmedTitle,
+      bookingRows(input, locale),
+      `<p style="color:#57534e; margin:16px 0 0;">${escapeHtml(strings.customer.confirmedNote)}</p>`,
+    ),
   });
 }
-
-// ---------------------------------------------------------------------------
-// Booking cancelled
-// ---------------------------------------------------------------------------
 
 export async function sendCancellationOwnerNotificationEmail(
   input: BookingEmailInput & { cancelledAt: Date },
@@ -231,23 +243,18 @@ export async function sendCancellationOwnerNotificationEmail(
   const toEmail = requireReceiverEmail();
   if (!toEmail) return { delivered: false, error: "not_configured" };
 
-  const labels = getEmailStrings(defaultLocale).labels;
-  const cancelledAtLabel = input.cancelledAt.toLocaleString("en-US", {
-    timeZone: "Asia/Jerusalem",
-    dateStyle: "full",
-    timeStyle: "short",
-  });
-
-  const html = renderEmailHtml(
-    "Booking cancelled — MOATSEM",
-    bookingRows(input, labels, input.serviceName, [[labels.cancelledAt, `${cancelledAtLabel} (Asia/Jerusalem)`]]),
-  );
+  const locale = OWNER_EMAIL_LOCALE;
+  const strings = getEmailStrings(locale);
+  const cancelledAtRow: Row = [
+    strings.labels.cancelledAt,
+    `${escapeHtml(formatInstant(input.cancelledAt, locale))} ${escapeHtml(strings.israelTime)}`,
+  ];
 
   return sendEmail({
     to: toEmail,
     replyTo: input.customerEmail,
-    subject: `Booking cancelled: ${input.customerName} — ${input.date} ${input.startTime}`,
-    html,
+    subject: format(strings.owner.cancelledSubject, subjectValues(input, locale)),
+    html: renderEmailHtml(locale, strings.owner.cancelledTitle, bookingRows(input, locale, [cancelledAtRow])),
   });
 }
 
@@ -256,24 +263,19 @@ export async function sendCancellationCustomerEmail(
 ): Promise<EmailDeliveryResult> {
   const locale = input.locale ?? defaultLocale;
   const strings = getEmailStrings(locale);
-  const serviceName = translateServiceNameForLocale(input.serviceName, locale);
-  const cancelledAtLocale = locale === "he" ? "he-IL" : "en-US";
-  const cancelledAtLabel = input.cancelledAt.toLocaleString(cancelledAtLocale, {
-    timeZone: "Asia/Jerusalem",
-    dateStyle: "full",
-    timeStyle: "short",
-  });
-
-  const html = renderEmailHtml(
-    strings.cancelledTitle,
-    bookingRows(input, strings.labels, serviceName, [[strings.labels.cancelledAt, `${cancelledAtLabel} (Asia/Jerusalem)`]]),
-    `<p style="color:#666; margin-top:16px;">${escapeHtml(strings.cancelledNote)}</p>`,
-    strings.dir,
-  );
+  const cancelledAtRow: Row = [
+    strings.labels.cancelledAt,
+    `${escapeHtml(formatInstant(input.cancelledAt, locale))} ${escapeHtml(strings.israelTime)}`,
+  ];
 
   return sendEmail({
     to: input.customerEmail,
-    subject: strings.cancelledSubject(input.date, input.startTime),
-    html,
+    subject: format(strings.customer.cancelledSubject, subjectValues(input, locale)),
+    html: renderEmailHtml(
+      locale,
+      strings.customer.cancelledTitle,
+      bookingRows(input, locale, [cancelledAtRow]),
+      `<p style="color:#57534e; margin:16px 0 0;">${escapeHtml(strings.customer.cancelledNote)}</p>`,
+    ),
   });
 }

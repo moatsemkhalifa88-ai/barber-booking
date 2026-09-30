@@ -36,7 +36,7 @@ export default async function Home() {
       <main className="flex-1">
         <Hero dict={dict} />
         <About dict={dict} />
-        <Services dict={dict} />
+        <Services dict={dict} locale={locale} />
         <Barbers dict={dict} />
         <BookingWidget services={services} isBookingConfigured={isBookingConfigured} />
         <WorkingHours dict={dict} />

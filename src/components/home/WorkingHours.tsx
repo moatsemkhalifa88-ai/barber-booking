@@ -5,20 +5,20 @@ import type { Dictionary } from "@/i18n";
 
 export function WorkingHours({ dict }: { dict: Dictionary }) {
   return (
-    <section className="border-b border-line/80 bg-ink">
+    <section id="hours" className="border-b border-border bg-surface">
       <div className="mx-auto flex max-w-4xl flex-col items-center gap-12 px-6 py-24 sm:px-8 lg:px-12 lg:py-32">
         <SectionHeading eyebrow={dict.workingHours.eyebrow} title={dict.workingHours.title} />
 
-        <dl className="w-full max-w-xl divide-y divide-line rounded-2xl border border-line bg-charcoal">
+        <dl className="w-full max-w-xl divide-y divide-border rounded-2xl border border-border bg-surface-2">
           {weekHours.map((day) => (
             <div
               key={day.day}
               className="flex items-center justify-between gap-4 px-6 py-4"
             >
-              <dt className="text-sm font-medium text-cream">{dict.workingHours.days[day.day].label}</dt>
+              <dt className="text-sm font-medium text-fg">{dict.workingHours.days[day.day].label}</dt>
               <dd
-                className={`text-sm font-semibold tracking-wide ${
-                  day.isOpen ? "text-gold-light" : "text-muted"
+                className={`text-sm font-semibold ${
+                  day.isOpen ? "text-accent" : "text-muted"
                 }`}
               >
                 {day.isOpen ? <Bidi>{dict.workingHours.hoursLabel}</Bidi> : dict.workingHours.closedLabel}

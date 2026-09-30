@@ -9,7 +9,7 @@ import { Bidi } from "@/components/ui/Bidi";
 import { createBookingAction, getAvailabilityAction } from "@/lib/booking/actions";
 import { FALLBACK_BARBERS } from "@/lib/booking/fallback-data";
 import { BOOKABLE_DAYS_OF_WEEK, TIME_SLOTS } from "@/lib/booking/constants";
-import { formatPrice } from "@/lib/format";
+import { formatDate, formatPrice } from "@/lib/format";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { format } from "@/i18n";
 import type { BarberSlotAvailability, BookingSummary, ServiceOption } from "@/types/booking";
@@ -94,6 +94,7 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
 
   const translateServiceName = (name: string) => dict.services.nameByEnglish[name] ?? name;
   const translateBarberRole = (role: string) => dict.barbers.roleByEnglish[role] ?? role;
+  const translateBarberName = (name: string) => dict.barbers.nameByEnglish[name] ?? name;
 
   const selectedService = services.find((service) => service.id === serviceId);
 
@@ -173,43 +174,43 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
 
   if (step === "confirmed" && confirmation) {
     return (
-      <section id="booking" className="scroll-mt-24 border-b border-line/80 bg-charcoal">
+      <section id="booking" className="border-b border-border bg-surface-2">
         <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 px-6 py-24 text-center sm:px-8 lg:px-12 lg:py-32">
-          <span className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-gold/60 bg-gold/10 text-2xl text-gold-light">
+          <span className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-accent bg-accent-soft text-2xl text-accent">
             ✓
           </span>
-          <h2 className="font-display text-3xl text-cream sm:text-4xl">{dict.booking.confirmedHeading}</h2>
+          <h2 className="font-display text-3xl text-fg sm:text-4xl">{dict.booking.confirmedHeading}</h2>
           <p className="text-muted">
             {format(dict.booking.confirmedBody, { name: confirmation.customerName })}
           </p>
 
-          <div className="mt-2 flex flex-col gap-4 rounded-2xl border border-gold/40 bg-ink p-6 text-start sm:p-8">
-            <div className="flex items-center justify-between gap-4 border-b border-line/80 pb-4">
-              <span className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">
+          <div className="mt-2 flex flex-col gap-4 rounded-2xl border border-accent bg-surface p-6 text-start sm:p-8">
+            <div className="flex items-center justify-between gap-4 border-b border-border pb-4">
+              <span className="text-xs font-semibold text-accent">
                 {dict.booking.referenceLabel}
               </span>
-              <span className="font-display text-xl text-gold-light">
+              <span className="font-display text-xl text-accent">
                 <Bidi>{confirmation.bookingReference}</Bidi>
               </span>
             </div>
             <dl className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <dt className="text-muted">{dict.booking.serviceLabel}</dt>
-                <dd className="text-cream">{translateServiceName(confirmation.service.name)}</dd>
+                <dd className="text-fg">{translateServiceName(confirmation.service.name)}</dd>
               </div>
               <div>
                 <dt className="text-muted">{dict.booking.barberLabel}</dt>
-                <dd className="text-cream">{confirmation.barber.name}</dd>
+                <dd className="text-fg">{translateBarberName(confirmation.barber.name)}</dd>
               </div>
               <div>
                 <dt className="text-muted">{dict.booking.dateLabel}</dt>
-                <dd className="text-cream">
-                  <Bidi>{confirmation.date}</Bidi>
+                <dd className="text-fg">
+                  {formatDate(confirmation.date, locale)}
                 </dd>
               </div>
               <div>
                 <dt className="text-muted">{dict.booking.timeLabel}</dt>
-                <dd className="text-cream">
+                <dd className="text-fg">
                   <Bidi>
                     {confirmation.startTime}–{confirmation.endTime}
                   </Bidi>
@@ -217,20 +218,20 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
               </div>
               <div>
                 <dt className="text-muted">{dict.booking.priceLabel}</dt>
-                <dd className="text-gold-light">
-                  <Bidi>{formatPrice(confirmation.service.priceIls)}</Bidi>
+                <dd className="text-accent">
+                  <Bidi>{formatPrice(confirmation.service.priceIls, locale)}</Bidi>
                 </dd>
               </div>
             </dl>
           </div>
 
-          <p className="max-w-md rounded-lg border border-gold/40 bg-gold/5 px-4 py-3 text-xs text-gold-light">
+          <p className="max-w-md rounded-lg border border-accent bg-accent-soft px-4 py-3 text-xs text-accent">
             {dict.booking.demoEmailNotice}
           </p>
 
           <p className="text-xs text-muted">
             {dict.booking.manageBookingHint}{" "}
-            <a href="/manage-booking" className="text-gold-light underline underline-offset-4">
+            <a href="/manage-booking" className="text-accent underline underline-offset-4">
               {dict.booking.manageBookingLinkText}
             </a>{" "}
             {dict.booking.manageBookingHintSuffix}
@@ -241,7 +242,7 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
   }
 
   return (
-    <section id="booking" className="scroll-mt-24 border-b border-line/80 bg-charcoal">
+    <section id="booking" className="border-b border-border bg-surface-2">
       <div className="mx-auto flex max-w-7xl flex-col gap-12 px-6 py-24 sm:px-8 lg:px-12 lg:py-32">
         <SectionHeading
           eyebrow={dict.booking.eyebrow}
@@ -250,16 +251,16 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
         />
 
         {!isBookingConfigured && isDev ? (
-          <p className="mx-auto max-w-2xl rounded-xl border border-gold/40 bg-gold/5 px-4 py-3 text-center text-xs text-gold-light">
+          <p className="mx-auto max-w-2xl rounded-xl border border-accent bg-accent-soft px-4 py-3 text-center text-xs text-accent">
             {NOT_CONFIGURED_MESSAGE_DEV}
           </p>
         ) : null}
 
         {step === "select" ? (
-          <div className="grid gap-8 rounded-3xl border border-line bg-ink p-6 sm:p-8 lg:grid-cols-[1fr_1.3fr] lg:p-10">
+          <div className="grid gap-8 rounded-3xl border border-border bg-surface p-6 sm:p-8 lg:grid-cols-[1fr_1.3fr] lg:p-10">
             <div className="flex flex-col gap-8">
               <div className="flex flex-col gap-3">
-                <h3 className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">
+                <h3 className="text-xs font-semibold text-accent">
                   {dict.booking.stepChooseService}
                 </h3>
                 <div role="group" aria-label={dict.booking.selectServiceGroup} className="flex flex-col gap-2">
@@ -273,17 +274,17 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
                         onClick={() => setServiceId(service.id)}
                         className={`flex items-center justify-between rounded-xl border px-4 py-3 text-start text-sm font-medium transition-colors duration-200 ${
                           isSelected
-                            ? "border-gold bg-gold/10 text-cream"
-                            : "border-line text-muted hover:border-gold/50 hover:text-gold-light"
+                            ? "border-accent bg-accent-soft text-fg"
+                            : "border-border text-muted hover:border-accent hover:text-accent"
                         }`}
                       >
                         <span>{translateServiceName(service.name)}</span>
                         <span className="flex items-center gap-2 text-xs text-muted">
-                          <Bidi>
+                          <bdi>
                             {service.durationMinutes} {dict.services.minutesSuffix}
-                          </Bidi>
-                          <span className="text-gold-light">
-                            <Bidi>{formatPrice(service.priceIls)}</Bidi>
+                          </bdi>
+                          <span className="text-accent">
+                            <Bidi>{formatPrice(service.priceIls, locale)}</Bidi>
                           </span>
                         </span>
                       </button>
@@ -293,7 +294,7 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
               </div>
 
               <div className="flex flex-col gap-3">
-                <h3 className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">
+                <h3 className="text-xs font-semibold text-accent">
                   {dict.booking.stepChooseDay}
                 </h3>
                 <div role="group" aria-label={dict.booking.selectDayGroup} className="flex flex-wrap gap-2">
@@ -307,11 +308,11 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
                         onClick={() => setDate(day.value)}
                         className={`flex min-w-16 flex-col items-center rounded-xl border px-3 py-2 text-sm font-medium transition-colors duration-200 ${
                           isSelected
-                            ? "border-gold bg-gold text-ink"
-                            : "border-line text-muted hover:border-gold/50 hover:text-gold-light"
+                            ? "border-accent bg-primary text-on-primary"
+                            : "border-border text-muted hover:border-accent hover:text-accent"
                         }`}
                       >
-                        <span className="text-xs uppercase opacity-80">{day.weekday}</span>
+                        <span className="text-xs opacity-80">{day.weekday}</span>
                         <span>{day.label}</span>
                       </button>
                     );
@@ -320,7 +321,7 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
               </div>
 
               <div className="flex flex-col gap-3">
-                <h3 className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">
+                <h3 className="text-xs font-semibold text-accent">
                   {dict.booking.stepChooseTime}
                 </h3>
                 <div role="group" aria-label={dict.booking.selectTimeGroup} className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-3">
@@ -334,8 +335,8 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
                         onClick={() => setTimeSlot(slot)}
                         className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
                           isSelected
-                            ? "border-gold bg-gold text-ink"
-                            : "border-line text-muted hover:border-gold/50 hover:text-gold-light"
+                            ? "border-accent bg-primary text-on-primary"
+                            : "border-border text-muted hover:border-accent hover:text-accent"
                         }`}
                       >
                         <Bidi>{slot}</Bidi>
@@ -346,22 +347,20 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
               </div>
             </div>
 
-            <div className="flex flex-col gap-5 rounded-2xl border border-line bg-charcoal p-6 sm:p-7">
-              <div className="flex flex-col gap-1 border-b border-line/80 pb-5">
-                <h3 className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">
+            <div className="flex flex-col gap-5 rounded-2xl border border-border bg-surface-2 p-6 sm:p-7">
+              <div className="flex flex-col gap-1 border-b border-border pb-5">
+                <h3 className="text-xs font-semibold text-accent">
                   {dict.booking.stepChooseBarber}
                 </h3>
-                <p className="font-display text-lg text-cream">
-                  <Bidi>
-                    {date} — {timeSlot}
-                  </Bidi>
+                <p className="font-display text-lg text-fg">
+                  {formatDate(date, locale)} · <bdi dir="ltr">{timeSlot}</bdi>
                 </p>
               </div>
 
               {isLoadingAvailability ? (
                 <p className="text-sm text-muted">{dict.booking.checkingAvailability}</p>
               ) : availabilityError ? (
-                <p className="text-sm text-red-400">{availabilityError}</p>
+                <p className="text-sm text-error">{availabilityError}</p>
               ) : displayAvailability.length === 0 ? (
                 <p className="text-sm text-muted">{dict.booking.closedDayMessage}</p>
               ) : (
@@ -377,19 +376,19 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
                           type="button"
                           disabled={!isBookable}
                           aria-pressed={isSelected}
-                          aria-label={`${barber.name}, ${statusLabel}`}
+                          aria-label={`${translateBarberName(barber.name)}, ${statusLabel}`}
                           onClick={() => setBarberId(barber.id)}
                           className={`flex w-full items-center justify-between gap-4 rounded-xl border px-4 py-3.5 text-start transition-colors duration-200 ${
                             !isBookable
-                              ? "border-line/60 bg-ink/40"
+                              ? "border-border bg-surface-2"
                               : isSelected
-                                ? "border-gold bg-gold/10"
-                                : "border-line bg-ink hover:border-gold/50"
+                                ? "border-accent bg-accent-soft"
+                                : "border-border bg-surface hover:border-accent"
                           } disabled:cursor-not-allowed`}
                         >
                           <span className="flex items-center gap-3">
                             <span
-                              className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-line bg-charcoal-light"
+                              className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-border bg-surface-2"
                               aria-hidden="true"
                             >
                               {barber.imageUrl ? (
@@ -397,8 +396,8 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
                               ) : null}
                             </span>
                             <span className="flex flex-col">
-                              <span className={`text-sm font-semibold ${isBookable ? "text-cream" : "text-muted"}`}>
-                                {barber.name}
+                              <span className={`text-sm font-semibold ${isBookable ? "text-fg" : "text-muted"}`}>
+                                {translateBarberName(barber.name)}
                               </span>
                               <span className="text-xs text-muted">{translateBarberRole(barber.role)}</span>
                             </span>
@@ -425,21 +424,19 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
         ) : (
           <form
             onSubmit={handleReviewSubmit}
-            className="mx-auto flex w-full max-w-2xl flex-col gap-6 rounded-3xl border border-line bg-ink p-6 sm:p-8 lg:p-10"
+            className="mx-auto flex w-full max-w-2xl flex-col gap-6 rounded-3xl border border-border bg-surface p-6 sm:p-8 lg:p-10"
           >
-            <div className="flex flex-col gap-1 border-b border-line/80 pb-5">
-              <h3 className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">
+            <div className="flex flex-col gap-1 border-b border-border pb-5">
+              <h3 className="text-xs font-semibold text-accent">
                 {dict.booking.stepYourDetails}
               </h3>
-              <p className="font-display text-lg text-cream">
-                {translateServiceName(selectedService?.name ?? "")} {dict.booking.withConnector} {selectedBarber?.name}{" "}
-                <Bidi>
-                  — {date} {dict.booking.atConnector} {timeSlot}
-                </Bidi>
+              <p className="font-display text-lg text-fg">
+                {translateServiceName(selectedService?.name ?? "")} {dict.booking.withConnector} {translateBarberName(selectedBarber?.name ?? "")}{" "}
+                — {formatDate(date, locale)} {dict.booking.atConnector} <bdi dir="ltr">{timeSlot}</bdi>
               </p>
               {selectedService ? (
-                <p className="text-sm text-gold-light">
-                  <Bidi>{formatPrice(selectedService.priceIls)}</Bidi>
+                <p className="text-sm text-accent">
+                  <Bidi>{formatPrice(selectedService.priceIls, locale)}</Bidi>
                 </p>
               ) : null}
             </div>
@@ -451,7 +448,7 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
                   required
                   value={fullName}
                   onChange={(event) => setFullName(event.target.value)}
-                  className="rounded-lg border border-line bg-charcoal px-4 py-2.5 text-cream focus-visible:outline-2 focus-visible:outline-gold"
+                  className="field"
                 />
               </label>
               <label className="flex flex-col gap-2 text-sm text-muted">
@@ -461,7 +458,7 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
                   type="tel"
                   value={phone}
                   onChange={(event) => setPhone(event.target.value)}
-                  className="rounded-lg border border-line bg-charcoal px-4 py-2.5 text-cream focus-visible:outline-2 focus-visible:outline-gold"
+                  className="field"
                 />
               </label>
             </div>
@@ -473,7 +470,7 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="rounded-lg border border-line bg-charcoal px-4 py-2.5 text-cream focus-visible:outline-2 focus-visible:outline-gold"
+                className="field"
               />
             </label>
 
@@ -483,17 +480,17 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
                 rows={3}
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
-                className="resize-none rounded-lg border border-line bg-charcoal px-4 py-2.5 text-cream focus-visible:outline-2 focus-visible:outline-gold"
+                className="resize-none field"
               />
             </label>
 
             {!isBookingConfigured ? (
-              <p className="rounded-lg border border-gold/40 bg-gold/5 px-4 py-3 text-sm text-gold-light">
+              <p className="rounded-lg border border-accent bg-accent-soft px-4 py-3 text-sm text-accent">
                 {isDev ? NOT_CONFIGURED_MESSAGE_DEV : dict.booking.notConfiguredProd}
               </p>
             ) : null}
 
-            {submitError ? <p className="text-sm text-red-400">{submitError}</p> : null}
+            {submitError ? <p className="text-sm text-error">{submitError}</p> : null}
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button

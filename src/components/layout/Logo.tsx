@@ -15,12 +15,12 @@ export function Logo() {
     <Link href="/#home" aria-label={dict.logo.ariaLabel} className="group flex items-center gap-3">
       <span
         aria-hidden="true"
-        className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gold/50 transition-all duration-300 group-hover:border-gold group-hover:shadow-[0_0_16px_-2px_rgba(201,162,75,0.5)]"
+        className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-accent"
       >
         <svg
           viewBox="0 0 32 32"
           fill="none"
-          className="h-5 w-5 text-gold transition-all duration-300 group-hover:scale-110 group-hover:text-gold-light"
+          className="h-5 w-5 text-accent"
         >
           <circle cx="9" cy="23" r="3.2" stroke="currentColor" strokeWidth="1.6" />
           <circle cx="23" cy="23" r="3.2" stroke="currentColor" strokeWidth="1.6" />
@@ -29,7 +29,7 @@ export function Logo() {
           <circle cx="16" cy="16" r="1.15" fill="currentColor" />
         </svg>
       </span>
-      <span className="font-display text-2xl font-semibold tracking-[0.2em] text-cream">MOATSEM</span>
+      <span dir="ltr" className="font-display text-xl font-bold tracking-[0.16em] text-fg sm:text-2xl">MOATSEM</span>
     </Link>
   );
 }

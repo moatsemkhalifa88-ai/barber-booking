@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
-import { Geist, Playfair_Display } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Assistant, Frank_Ruhl_Libre } from "next/font/google";
 import "./globals.css";
 import { getLocale } from "@/i18n/get-locale";
 import { getDictionary, dirForLocale } from "@/i18n";
@@ -8,15 +8,24 @@ import { cookies } from "next/headers";
 import { DemoBanner } from "@/components/layout/DemoBanner";
 import { DEMO_BANNER_COOKIE } from "@/lib/demo";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const assistant = Assistant({
+  variable: "--font-assistant",
+  subsets: ["hebrew", "latin"],
+  display: "swap",
 });
 
-const playfairDisplay = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
+const frankRuhlLibre = Frank_Ruhl_Libre({
+  variable: "--font-frank-ruhl",
+  subsets: ["hebrew", "latin"],
+  display: "swap",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#faf7f2",
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -39,9 +48,9 @@ export default async function RootLayout({
     <html
       lang={locale}
       dir={dirForLocale(locale)}
-      className={`${geistSans.variable} ${playfairDisplay.variable} h-full antialiased`}
+      className={`${assistant.variable} ${frankRuhlLibre.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-ink font-sans text-cream">
+      <body className="flex min-h-full flex-col bg-canvas font-sans text-fg">
         <LocaleProvider initialLocale={locale}>
           {isDemoBannerDismissed ? null : <DemoBanner />}
           {children}

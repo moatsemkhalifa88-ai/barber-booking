@@ -5,12 +5,12 @@ import { useState } from "react";
 import { cancelBookingAction, lookupBookingAction } from "@/lib/booking/actions";
 import { Button } from "@/components/ui/Button";
 import { Bidi } from "@/components/ui/Bidi";
-import { formatPrice } from "@/lib/format";
+import { formatDate, formatPrice } from "@/lib/format";
 import { useLocale } from "@/i18n/LocaleProvider";
 import type { BookingSummary } from "@/types/booking";
 
 export function ManageBookingForm() {
-  const { dict } = useLocale();
+  const { locale, dict } = useLocale();
   const translateServiceName = (name: string) => dict.services.nameByEnglish[name] ?? name;
 
   const [reference, setReference] = useState("");
@@ -63,7 +63,7 @@ export function ManageBookingForm() {
     <div className="mx-auto flex w-full max-w-xl flex-col gap-8">
       <form
         onSubmit={handleLookup}
-        className="flex flex-col gap-4 rounded-3xl border border-line bg-ink p-6 sm:p-8"
+        className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-6 sm:p-8"
       >
         <label className="flex flex-col gap-2 text-sm text-muted">
           {dict.manageBooking.referenceLabel}
@@ -72,7 +72,7 @@ export function ManageBookingForm() {
             value={reference}
             onChange={(event) => setReference(event.target.value)}
             placeholder={dict.manageBooking.referencePlaceholder}
-            className="rounded-lg border border-line bg-charcoal px-4 py-2.5 text-cream uppercase focus-visible:outline-2 focus-visible:outline-gold"
+            className="field"
           />
         </label>
         <label className="flex flex-col gap-2 text-sm text-muted">
@@ -82,11 +82,11 @@ export function ManageBookingForm() {
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="rounded-lg border border-line bg-charcoal px-4 py-2.5 text-cream focus-visible:outline-2 focus-visible:outline-gold"
+            className="field"
           />
         </label>
 
-        {error ? <p className="text-sm text-red-400">{error}</p> : null}
+        {error ? <p className="text-sm text-error">{error}</p> : null}
 
         <Button type="submit" variant="primary" disabled={isLookingUp}>
           {isLookingUp ? dict.manageBooking.lookingUp : dict.manageBooking.findBooking}
@@ -94,16 +94,16 @@ export function ManageBookingForm() {
       </form>
 
       {booking ? (
-        <div className="flex flex-col gap-5 rounded-2xl border border-gold/40 bg-charcoal p-6 sm:p-8">
-          <div className="flex items-center justify-between gap-4 border-b border-line/80 pb-4">
-            <span className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">
+        <div className="flex flex-col gap-5 rounded-2xl border border-accent bg-surface-2 p-6 sm:p-8">
+          <div className="flex items-center justify-between gap-4 border-b border-border pb-4">
+            <span className="text-xs font-semibold text-accent">
               <Bidi>{booking.bookingReference}</Bidi>
             </span>
             <span
-              className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase ${
+              className={`rounded-full border px-3 py-1 text-xs font-semibold ${
                 booking.status === "confirmed"
-                  ? "border-gold/50 bg-gold/10 text-gold-light"
-                  : "border-line text-muted"
+                  ? "border-accent bg-accent-soft text-accent"
+                  : "border-border text-muted"
               }`}
             >
               {dict.manageBooking.statusLabels[booking.status]}
@@ -113,21 +113,21 @@ export function ManageBookingForm() {
           <dl className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <dt className="text-muted">{dict.booking.serviceLabel}</dt>
-              <dd className="text-cream">{translateServiceName(booking.service.name)}</dd>
+              <dd className="text-fg">{translateServiceName(booking.service.name)}</dd>
             </div>
             <div>
               <dt className="text-muted">{dict.booking.barberLabel}</dt>
-              <dd className="text-cream">{booking.barber.name}</dd>
+              <dd className="text-fg">{dict.barbers.nameByEnglish[booking.barber.name] ?? booking.barber.name}</dd>
             </div>
             <div>
               <dt className="text-muted">{dict.booking.dateLabel}</dt>
-              <dd className="text-cream">
-                <Bidi>{booking.date}</Bidi>
+              <dd className="text-fg">
+                {formatDate(booking.date, locale)}
               </dd>
             </div>
             <div>
               <dt className="text-muted">{dict.booking.timeLabel}</dt>
-              <dd className="text-cream">
+              <dd className="text-fg">
                 <Bidi>
                   {booking.startTime}–{booking.endTime}
                 </Bidi>
@@ -135,13 +135,13 @@ export function ManageBookingForm() {
             </div>
             <div>
               <dt className="text-muted">{dict.booking.priceLabel}</dt>
-              <dd className="text-gold-light">
-                <Bidi>{formatPrice(booking.service.priceIls)}</Bidi>
+              <dd className="text-accent">
+                <Bidi>{formatPrice(booking.service.priceIls, locale)}</Bidi>
               </dd>
             </div>
           </dl>
 
-          {cancelMessage ? <p className="text-sm text-gold-light">{cancelMessage}</p> : null}
+          {cancelMessage ? <p className="text-sm text-accent">{cancelMessage}</p> : null}
 
           {booking.status === "confirmed" ? (
             <Button
@@ -149,7 +149,7 @@ export function ManageBookingForm() {
               variant="secondary"
               onClick={handleCancel}
               disabled={isCancelling}
-              className="border-red-400/50 text-red-300 hover:border-red-400 hover:text-red-200"
+              className="border-error text-error hover:border-error hover:text-error"
             >
               {isCancelling ? dict.manageBooking.cancelling : dict.manageBooking.cancelAppointment}
             </Button>
