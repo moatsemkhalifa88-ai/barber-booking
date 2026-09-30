@@ -16,16 +16,19 @@ export function DemoBanner() {
   }
 
   return (
-    <div role="region" aria-label={dict.demoBanner.message} className="border-b border-accent bg-accent-soft">
-      <div className="mx-auto flex max-w-7xl items-center gap-3 px-6 py-2 sm:px-8 lg:px-12">
-        <p className="flex-1 text-center text-xs text-accent">{dict.demoBanner.message}</p>
+    <div role="region" aria-label={dict.demoBanner.message} className="border-b border-border bg-accent-soft">
+      <div className="container-page flex h-10 items-center gap-2">
+        <p className="min-w-0 flex-1 truncate text-center text-[13px] font-semibold text-accent sm:text-sm">
+          <span className="sm:hidden">{dict.demoBanner.messageShort}</span>
+          <span className="hidden sm:inline">{dict.demoBanner.message}</span>
+        </p>
         <button
           type="button"
           onClick={dismiss}
           aria-label={dict.demoBanner.dismiss}
-          className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-accent transition-colors duration-200 hover:bg-primary/20"
+          className="-me-2 inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md text-accent transition-colors duration-150 hover:bg-surface/60"
         >
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 10 10" fill="none" aria-hidden="true">
             <line x1="1" y1="1" x2="9" y2="9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             <line x1="9" y1="1" x2="1" y2="9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>

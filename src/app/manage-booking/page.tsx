@@ -25,7 +25,7 @@ export default async function ManageBookingPage() {
       <Header />
       <main className="flex-1">
         <section className="border-b border-border bg-surface-2">
-          <div className="mx-auto flex max-w-7xl flex-col gap-14 px-6 py-24 sm:px-8 lg:px-12 lg:py-32">
+          <div className="container-page section-y flex flex-col gap-8 lg:gap-12">
             <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
               <SectionHeading
                 align="start"

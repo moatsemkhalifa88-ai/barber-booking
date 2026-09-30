@@ -27,7 +27,7 @@ export function Footer({ dict }: { dict: Dictionary }) {
 
   return (
     <footer className="border-t border-border bg-surface-2">
-      <div className="mx-auto grid max-w-7xl gap-12 px-6 py-16 sm:px-8 md:grid-cols-4 lg:px-12">
+      <div className="container-page grid gap-10 py-12 md:grid-cols-4 lg:py-16">
         <div className="flex flex-col gap-4 md:col-span-2">
           <span dir="ltr" className="font-display text-2xl font-bold tracking-[0.16em] text-fg">
             MOATSEM
@@ -83,7 +83,7 @@ export function Footer({ dict }: { dict: Dictionary }) {
       </div>
 
       <div className="border-t border-border">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-6 py-6 text-center text-xs text-muted sm:px-8 lg:px-12">
+        <div className="container-page flex flex-col gap-2 py-6 text-center text-xs text-muted">
           <p>
             {dict.footer.photoCreditsLabel}{" "}
             <a

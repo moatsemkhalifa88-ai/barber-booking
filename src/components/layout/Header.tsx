@@ -21,8 +21,8 @@ export function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-surface/90 backdrop-blur-md">
-      <div className="mx-auto flex h-[var(--header-height)] max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-12">
+    <header className="sticky top-0 z-40 border-b border-border bg-surface/90 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+      <div className="container-page flex h-[var(--header-height)] items-center justify-between gap-3">
         <Logo />
 
         <nav

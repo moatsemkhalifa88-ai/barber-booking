@@ -126,6 +126,7 @@ export const he: Dictionary = {
     eyebrow: "מתכננים ביקור?",
     title: "שעות פעילות",
     closedLabel: "סגור",
+    todayLabel: "היום",
     hoursLabel: "12:00–22:00",
     days: {
       sunday: { label: "יום ראשון", short: "א׳" },

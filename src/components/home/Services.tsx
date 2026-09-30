@@ -8,15 +8,12 @@ import { format, type Dictionary, type Locale } from "@/i18n";
 
 export function Services({ dict, locale }: { dict: Dictionary; locale: Locale }) {
   return (
-    <section id="services" className="border-b border-border bg-surface-2">
-      <div className="mx-auto flex max-w-7xl flex-col gap-14 px-6 py-24 sm:px-8 lg:px-12 lg:py-32">
-        <SectionHeading
-          eyebrow={dict.services.eyebrow}
-          title={dict.services.title}
-          description={dict.services.description}
-        />
+    <section id="services" className="section-y border-b border-border bg-surface-2">
+      <div className="container-page flex flex-col gap-8 lg:gap-12">
+        <SectionHeading eyebrow={dict.services.eyebrow} title={dict.services.title} description={dict.services.description} />
 
-        <div className="grid gap-6 md:grid-cols-3">
+        {/* Phones: swipe row (each card 80% wide so the next one peeks in). md+: three-column grid. */}
+        <div className="swipe-row md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:px-0">
           {services.map((service) => {
             const translated = dict.services.items[service.id];
             const name = translated?.name ?? service.name;
@@ -25,38 +22,34 @@ export function Services({ dict, locale }: { dict: Dictionary; locale: Locale })
             return (
               <article
                 key={service.id}
-                className="group flex flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-card transition-shadow duration-200 hover:shadow-raised"
+                className="flex w-[80%] flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-card sm:w-[46%] md:w-auto"
               >
-                <div className="relative aspect-[4/3] w-full overflow-hidden">
+                <div className="relative aspect-[16/10] w-full">
                   <Image
                     src={service.image}
                     alt={format(dict.services.imageAlt, { name })}
                     fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                    sizes="(min-width: 768px) 33vw, 80vw"
+                    className="object-cover"
                   />
                 </div>
 
-                <div className="flex flex-1 flex-col gap-6 p-8">
-                  <div className="flex items-start justify-between gap-4">
-                    <h3 className="font-display text-2xl font-bold text-fg">{name}</h3>
-                    <span className="shrink-0 rounded-full border border-border px-3 py-1 text-xs font-semibold text-accent">
-                      <bdi>
-                        {service.durationMinutes} {dict.services.minutesSuffix}
-                      </bdi>
-                    </span>
-                  </div>
-
-                  <p className="flex-1 text-sm leading-relaxed text-muted">{description}</p>
-
-                  <div className="flex flex-col gap-4 border-t border-border pt-5">
-                    <span className="text-2xl font-bold tabular-nums text-accent">
+                <div className="flex flex-1 flex-col gap-3 p-4 lg:p-6">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h3 className="font-display text-xl font-bold text-fg lg:text-2xl">{name}</h3>
+                    <span className="text-xl font-bold whitespace-nowrap text-accent tabular-nums">
                       <Bidi>{formatPrice(service.priceIls, locale)}</Bidi>
                     </span>
-                    <Button href="#booking" variant="secondary" className="w-full">
-                      {dict.services.bookThisService}
-                    </Button>
                   </div>
+                  <span className="self-start rounded-full bg-surface-2 px-2.5 py-0.5 text-sm font-semibold text-muted">
+                    <bdi>
+                      {service.durationMinutes} {dict.services.minutesSuffix}
+                    </bdi>
+                  </span>
+                  <p className="line-clamp-2 flex-1 text-[15px] leading-relaxed text-muted">{description}</p>
+                  <Button href="#booking" variant="secondary" className="mt-1 w-full">
+                    {dict.services.bookThisService}
+                  </Button>
                 </div>
               </article>
             );

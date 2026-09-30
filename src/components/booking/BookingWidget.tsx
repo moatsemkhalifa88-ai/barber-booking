@@ -142,8 +142,8 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
 
   if (step === "confirmed" && confirmation) {
     return (
-      <section id="booking" className="border-b border-border bg-surface-2">
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 px-6 py-24 text-center sm:px-8 lg:px-12 lg:py-32">
+      <section id="booking" className="section-y border-b border-border bg-surface-2">
+        <div className="container-page flex max-w-3xl flex-col items-center gap-6 text-center">
           <span className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-accent bg-accent-soft text-2xl text-accent">
             ✓
           </span>
@@ -210,8 +210,8 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
   }
 
   return (
-    <section id="booking" className="border-b border-border bg-surface-2">
-      <div className="mx-auto flex max-w-7xl flex-col gap-12 px-6 py-24 sm:px-8 lg:px-12 lg:py-32">
+    <section id="booking" className="section-y border-b border-border bg-surface-2">
+      <div className="container-page flex flex-col gap-8 lg:gap-12">
         <SectionHeading
           eyebrow={dict.booking.eyebrow}
           title={dict.booking.title}

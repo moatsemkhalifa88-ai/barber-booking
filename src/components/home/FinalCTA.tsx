@@ -3,13 +3,13 @@ import type { Dictionary } from "@/i18n";
 
 export function FinalCTA({ dict }: { dict: Dictionary }) {
   return (
-    <section className="relative overflow-hidden border-b border-border bg-surface">
-      <div className="relative mx-auto flex max-w-4xl flex-col items-center gap-8 px-6 py-24 text-center sm:px-8 lg:py-32">
-        <h2 className="font-display max-w-2xl text-3xl leading-tight text-fg sm:text-4xl md:text-5xl">
+    <section className="section-y bg-primary text-on-primary">
+      <div className="container-page flex flex-col items-center gap-4 text-center">
+        <h2 className="font-display text-[1.75rem] leading-tight font-bold text-balance sm:text-4xl lg:text-5xl">
           {dict.finalCta.title}
         </h2>
-        <p className="max-w-lg text-base leading-relaxed text-muted sm:text-lg">{dict.finalCta.subtitle}</p>
-        <Button href="#booking" variant="primary">
+        <p className="max-w-lg text-base leading-relaxed text-on-primary/85 sm:text-lg">{dict.finalCta.subtitle}</p>
+        <Button href="#booking" variant="onDark" className="mt-2 w-full sm:w-auto">
           {dict.finalCta.cta}
         </Button>
       </div>

@@ -2,58 +2,66 @@ import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import type { Dictionary } from "@/i18n";
 
+/**
+ * Mobile-first hero: photo, headline, short subtitle and both buttons fit on
+ * the first screen of a phone (sized with svh, which excludes the browser
+ * toolbars). On desktop the text and photo sit side by side.
+ */
 export function Hero({ dict }: { dict: Dictionary }) {
+  const stats = [
+    [dict.hero.statBarbersLabel, dict.hero.statBarbersValue],
+    [dict.hero.statServicesLabel, dict.hero.statServicesValue],
+    [dict.hero.statOpenDaysLabel, dict.hero.statOpenDaysValue],
+  ];
+
   return (
-    <section id="home" className="relative overflow-hidden bg-primary">
-      <Image
-        src="/images/hero/hero-barbershop.jpg"
-        alt={dict.hero.imageAlt}
-        fill
-        preload
-        sizes="100vw"
-        quality={75}
-        className="object-cover object-[75%_30%]"
-      />
-      {/* Charcoal scrim keeps white text at ≥ 4.5:1 over any part of the photo. */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-primary/70" />
+    <section id="home" data-hero className="border-b border-border bg-canvas">
+      <div className="container-page grid items-center gap-5 pt-4 pb-7 lg:min-h-[calc(100svh-var(--header-height)-40px)] lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:py-12">
+        <div className="relative order-first h-[clamp(190px,32svh,340px)] overflow-hidden rounded-xl shadow-card lg:order-last lg:h-auto lg:max-h-[640px] lg:min-h-[480px] lg:self-stretch">
+          <Image
+            src="/images/hero/hero-barbershop.jpg"
+            alt={dict.hero.imageAlt}
+            fill
+            preload
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            quality={75}
+            className="object-cover object-[70%_35%]"
+          />
+        </div>
 
-      <div className="relative mx-auto flex min-h-[92vh] max-w-7xl flex-col justify-center gap-10 px-6 py-32 sm:px-8 lg:px-12">
-        <div className="flex flex-col items-start gap-7">
-          <span className="inline-flex items-center gap-2 rounded-full border border-gold/60 px-4 py-1.5 text-sm font-semibold text-gold">
-            {dict.hero.badge}
-          </span>
+        <div className="flex flex-col items-start gap-3 sm:gap-5">
+          <span className="rounded-full bg-accent-soft px-3 py-1 text-sm font-semibold text-accent">{dict.hero.badge}</span>
 
-          <h1 className="font-display max-w-4xl text-5xl leading-[1.1] font-bold text-on-primary sm:text-6xl md:text-7xl">
-            {dict.hero.titleLead} <span className="text-gold">{dict.hero.titleHighlight}</span>
+          <h1 className="font-display text-[2.125rem] leading-[1.12] font-bold text-balance text-fg sm:text-5xl lg:text-[3.5rem]">
+            {dict.hero.titleLead} <span className="text-accent">{dict.hero.titleHighlight}</span>
           </h1>
 
-          <p className="max-w-xl text-lg leading-relaxed text-on-primary/90 sm:text-xl">{dict.hero.subtitle}</p>
+          <p className="max-w-xl text-base leading-relaxed text-muted sm:text-lg">
+            <span className="sm:hidden">{dict.hero.subtitleShort}</span>
+            <span className="hidden sm:inline">{dict.hero.subtitle}</span>
+          </p>
 
-          <div className="mt-2 flex flex-col gap-4 sm:flex-row">
-            <Button href="#booking" variant="onDark">
+          <div data-hero-actions className="mt-1 grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto">
+            <Button href="#booking" variant="primary">
               {dict.hero.ctaBook}
             </Button>
-            <Button href="#services" variant="outlineOnDark">
+            <Button href="#services" variant="secondary">
               {dict.hero.ctaServices}
             </Button>
           </div>
-        </div>
 
-        <dl className="mt-10 grid max-w-2xl grid-cols-3 gap-6 border-t border-on-primary/25 pt-8">
-          {[
-            [dict.hero.statBarbersLabel, dict.hero.statBarbersValue],
-            [dict.hero.statServicesLabel, dict.hero.statServicesValue],
-            [dict.hero.statOpenDaysLabel, dict.hero.statOpenDaysValue],
-          ].map(([label, value]) => (
-            <div key={label} className="flex flex-col gap-1">
-              <dt className="text-sm text-on-primary/80">{label}</dt>
-              <dd className="font-display text-2xl text-on-primary sm:text-3xl">
-                {/* <bdi> picks direction from the content: "א׳–ה׳" stays RTL, "Sun–Thu" LTR. */}
-                <bdi>{value}</bdi>
-              </dd>
-            </div>
-          ))}
-        </dl>
+          <dl className="mt-3 hidden gap-10 border-t border-border pt-5 sm:flex">
+            {stats.map(([label, value]) => (
+              <div key={label} className="flex flex-col gap-0.5">
+                <dt className="text-sm text-muted">{label}</dt>
+                <dd className="font-display text-2xl font-bold text-fg">
+                  {/* <bdi> picks direction from the content: "א׳–ה׳" stays RTL, "Sun–Thu" LTR. */}
+                  <bdi>{value}</bdi>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
       </div>
     </section>
   );

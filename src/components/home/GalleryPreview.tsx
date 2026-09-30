@@ -6,26 +6,20 @@ const tileIds = [1, 2, 3, 4, 5, 6] as const;
 
 export function GalleryPreview({ dict }: { dict: Dictionary }) {
   return (
-    <section id="gallery" className="border-b border-border bg-surface-2">
-      <div className="mx-auto flex max-w-7xl flex-col items-center gap-14 px-6 py-24 sm:px-8 lg:px-12 lg:py-32">
-        <SectionHeading
-          eyebrow={dict.gallery.eyebrow}
-          title={dict.gallery.title}
-          description={dict.gallery.description}
-        />
+    <section id="gallery" className="section-y border-b border-border bg-surface-2">
+      <div className="container-page flex flex-col gap-8 lg:gap-12">
+        <SectionHeading eyebrow={dict.gallery.eyebrow} title={dict.gallery.title} description={dict.gallery.description} />
 
-        <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3">
+        {/* Phones: swipe row of portrait tiles. sm+: grid. */}
+        <div className="swipe-row sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0">
           {tileIds.map((id) => (
-            <div
-              key={id}
-              className="group relative aspect-square overflow-hidden rounded-2xl border border-border transition-colors duration-300 hover:border-accent"
-            >
+            <div key={id} className="relative aspect-[4/5] w-[68%] overflow-hidden rounded-lg sm:aspect-square sm:w-auto">
               <Image
                 src={`/images/gallery/gallery-${id}.jpg`}
                 alt={dict.gallery.alt[id]}
                 fill
-                sizes="(max-width: 640px) 50vw, 33vw"
-                className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                sizes="(min-width: 640px) 33vw, 68vw"
+                className="object-cover"
               />
             </div>
           ))}

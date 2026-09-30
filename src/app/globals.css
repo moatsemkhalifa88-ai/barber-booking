@@ -138,3 +138,65 @@ a,
     border-color: var(--color-error);
   }
 }
+
+@layer components {
+  /* Page container: 16px gutter on phones (24 tablet, 48 desktop), widened by iOS safe areas in landscape. */
+  .container-page {
+    --gutter: 16px;
+    width: 100%;
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-left: max(var(--gutter), env(safe-area-inset-left));
+    padding-right: max(var(--gutter), env(safe-area-inset-right));
+  }
+
+  @media (min-width: 640px) {
+    .container-page {
+      --gutter: 24px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container-page {
+      --gutter: 48px;
+    }
+  }
+
+  /* Vertical section rhythm: 56px on phones, 96px on desktop. */
+  .section-y {
+    padding-block: 56px;
+  }
+
+  @media (min-width: 1024px) {
+    .section-y {
+      padding-block: 96px;
+    }
+  }
+
+  /*
+   * Horizontal swipe row for phones: bleeds to the screen edges inside a
+   * .container-page, snaps each card, and hides the scrollbar. Cards set
+   * their own width (e.g. 80%) so the next card peeks in as a swipe hint.
+   */
+  .swipe-row {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--gutter, 16px);
+    margin-inline: calc(var(--gutter, 16px) * -1);
+    padding-inline: var(--gutter, 16px);
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .swipe-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .swipe-row > * {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+}

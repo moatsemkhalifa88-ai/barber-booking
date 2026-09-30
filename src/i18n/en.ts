@@ -44,7 +44,7 @@ export const en = {
       "Three professional barbers, personal attention and real time for every client. Choose a service, a day and a time — and your chair is reserved.",
     subtitleShort: "Personal attention, precision in every detail, and your chair reserved in a minute.",
     imageAlt: "A barber trimming a client's beard with scissors in a warm, dimly lit barbershop",
-    ctaBook: "Book an Appointment",
+    ctaBook: "Book Now",
     ctaServices: "Services & Prices",
     statBarbersLabel: "Barbers",
     statBarbersValue: "3",
@@ -127,6 +127,7 @@ export const en = {
     eyebrow: "Planning a visit?",
     title: "Opening Hours",
     closedLabel: "Closed",
+    todayLabel: "Today",
     hoursLabel: "12:00–22:00",
     days: {
       sunday: { label: "Sunday", short: "Sun" },
