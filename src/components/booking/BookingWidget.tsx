@@ -650,9 +650,9 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
             <div className="flex min-w-0 flex-1 flex-col">
               {selectedService ? (
                 <>
-                  {/* The price never truncates; a long service name does. */}
-                  <span className="flex min-w-0 items-baseline gap-1.5 text-base font-bold text-fg">
-                    <span className="truncate">{translateServiceName(selectedService.name)}</span>
+                  {/* Service name and price wrap rather than truncate, so the price is always visible. */}
+                  <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 text-base leading-snug font-bold text-fg">
+                    <span>{translateServiceName(selectedService.name)}</span>
                     <span className="shrink-0 tabular-nums">
                       · <Bidi>{formatPrice(selectedService.priceIls, locale)}</Bidi>
                     </span>
@@ -663,13 +663,16 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
                 <span className="text-sm text-muted">{t.summaryPrompt}</span>
               )}
             </div>
+            {/* Distinct keys: if React reused one <button> for both, the tap on "Continue" would turn it
+                into the submit button mid-click and submit the empty details form. */}
             {step < 4 ? (
-              <Button onClick={() => goToStep((step + 1) as Step)} disabled={!canContinue} className="shrink-0 px-5">
+              <Button key="next" onClick={() => goToStep((step + 1) as Step)} disabled={!canContinue} className="shrink-0 px-5">
                 {t.continue}
                 <ForwardIcon className="hidden h-4 w-4 sm:block" />
               </Button>
             ) : (
               <Button
+                key="submit"
                 type="submit"
                 form="booking-details"
                 disabled={isSubmitting || !isBookingConfigured}
