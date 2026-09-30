@@ -1,4 +1,5 @@
 import { Bidi } from "@/components/ui/Bidi";
+import { nowInShopTimezone } from "@/lib/booking/datetime";
 import type { Dictionary } from "@/i18n";
 
 const AUTHOR_EMAIL = "moatsem.khalifa88@gmail.com";
@@ -105,7 +106,7 @@ export function Footer({ dict }: { dict: Dictionary }) {
             . {dict.footer.otherPhotosCredit}
           </p>
           <p>
-            &copy; <Bidi>{new Date().getFullYear()}</Bidi> MOATSEM. {dict.footer.rightsReserved}
+            &copy; <Bidi>{nowInShopTimezone().date.slice(0, 4)}</Bidi> MOATSEM. {dict.footer.rightsReserved}
           </p>
         </div>
       </div>

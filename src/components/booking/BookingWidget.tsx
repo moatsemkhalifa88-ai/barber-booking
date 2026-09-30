@@ -8,68 +8,35 @@ import { Button } from "@/components/ui/Button";
 import { Bidi } from "@/components/ui/Bidi";
 import { createBookingAction, getAvailabilityAction } from "@/lib/booking/actions";
 import { FALLBACK_BARBERS } from "@/lib/booking/fallback-data";
-import { BOOKABLE_DAYS_OF_WEEK, TIME_SLOTS } from "@/lib/booking/constants";
-import { formatDate, formatPrice } from "@/lib/format";
+import { TIME_SLOTS } from "@/lib/booking/constants";
+import { isBookableDate, upcomingDays } from "@/lib/booking/datetime";
+import { formatDate, formatDateChip, formatPrice } from "@/lib/format";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { format } from "@/i18n";
 import type { BarberSlotAvailability, BookingSummary, ServiceOption } from "@/types/booking";
-import type { DayId } from "@/types";
 
 interface BookingWidgetProps {
   services: ServiceOption[];
   isBookingConfigured: boolean;
 }
 
-const DAY_IDS: DayId[] = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-
 const NOT_CONFIGURED_MESSAGE_DEV =
   "Development notice: this is a UI preview only — either Supabase env vars are missing (set NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, and SUPABASE_SERVICE_ROLE_KEY in .env.local) or the services table doesn't match the app's expected schema yet (check for pending migrations). See the server console for the exact error.";
-
-function toDateValue(date: Date): string {
-  // Local calendar date, not toISOString() (which is UTC and can land on a
-  // different calendar day than getDay()'s local weekday near midnight).
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function nextBookableDates(
-  count: number,
-  dayShortLabels: Record<DayId, string>,
-  dateLocale: string,
-): { value: string; label: string; weekday: string }[] {
-  const dates: { value: string; label: string; weekday: string }[] = [];
-  const cursor = new Date();
-
-  while (dates.length < count) {
-    const dayOfWeek = cursor.getDay();
-    if ((BOOKABLE_DAYS_OF_WEEK as readonly number[]).includes(dayOfWeek)) {
-      dates.push({
-        value: toDateValue(cursor),
-        label: cursor.toLocaleDateString(dateLocale, { month: "short", day: "numeric" }),
-        weekday: dayShortLabels[DAY_IDS[dayOfWeek]],
-      });
-    }
-    cursor.setDate(cursor.getDate() + 1);
-  }
-
-  return dates;
-}
 
 type Step = "select" | "details" | "confirmed";
 
 export function BookingWidget({ services, isBookingConfigured }: BookingWidgetProps) {
   const { locale, dict } = useLocale();
-  const dateLocale = locale === "he" ? "he-IL" : "en-US";
-  const dayShortLabels = useMemo(() => {
-    const entries = Object.entries(dict.workingHours.days) as [DayId, { label: string; short: string }][];
-    return Object.fromEntries(entries.map(([id, day]) => [id, day.short])) as Record<DayId, string>;
-  }, [dict]);
-
+  // Shop-time (Asia/Jerusalem) calendar, identical on the UTC server render and in the browser.
   const bookableDates = useMemo(
-    () => nextBookableDates(14, dayShortLabels, dateLocale),
-    [dayShortLabels, dateLocale],
+    () =>
+      upcomingDays(14)
+        .filter((day) => day.isOpen)
+        .map((day) => {
+          const chip = formatDateChip(day.date, locale);
+          return { value: day.date, weekday: chip.weekday, label: chip.day };
+        }),
+    [locale],
   );
   const isDev = process.env.NODE_ENV === "development";
 
@@ -78,7 +45,7 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
   const [timeSlot, setTimeSlot] = useState<string>(TIME_SLOTS[4]);
   const [barberId, setBarberId] = useState<string | null>(null);
 
-  const [availability, setAvailability] = useState<BarberSlotAvailability[]>([]);
+  const [availability, setAvailability] = useState<BarberSlotAvailability[] | null>(null);
   const [isLoadingAvailability, startAvailabilityTransition] = useTransition();
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
 
@@ -134,7 +101,8 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
     });
   }, [serviceId, date, timeSlot, isBookingConfigured]);
 
-  const displayAvailability = isBookingConfigured ? availability : fallbackAvailability;
+  const displayAvailability = (isBookingConfigured ? availability : fallbackAvailability) ?? [];
+  const isAvailabilityPending = isLoadingAvailability || (isBookingConfigured && availability === null);
   const selectedBarber = displayAvailability.find((entry) => entry.barber.id === barberId)?.barber;
 
   function handleReviewSubmit(event: React.FormEvent) {
@@ -357,11 +325,11 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
                 </p>
               </div>
 
-              {isLoadingAvailability ? (
+              {isAvailabilityPending ? (
                 <p className="text-sm text-muted">{dict.booking.checkingAvailability}</p>
               ) : availabilityError ? (
                 <p className="text-sm text-error">{availabilityError}</p>
-              ) : displayAvailability.length === 0 ? (
+              ) : !isBookableDate(date) ? (
                 <p className="text-sm text-muted">{dict.booking.closedDayMessage}</p>
               ) : (
                 <ul className="flex flex-col gap-3">
