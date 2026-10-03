@@ -28,19 +28,19 @@ export function Footer({ dict }: { dict: Dictionary }) {
   const openDays = new Set(["sunday", "monday", "tuesday", "wednesday", "thursday"]);
 
   return (
-    <footer className="border-t border-border bg-surface-2">
+    <footer className="tone-dark bg-ink text-on-ink">
       <div className="container-page grid gap-10 py-12 md:grid-cols-4 lg:py-16">
         <div className="flex flex-col gap-4 md:col-span-2">
-          <span dir="ltr" className="font-display text-2xl font-bold tracking-[0.16em] text-fg">
+          <span dir="ltr" className="font-display text-2xl font-bold tracking-[0.16em] text-on-ink">
             MOATSEM
           </span>
-          <p className="max-w-sm text-sm leading-relaxed text-muted">{dict.footer.tagline}</p>
+          <p className="max-w-sm text-sm leading-relaxed text-on-ink-muted">{dict.footer.tagline}</p>
           <div className="mt-2 flex flex-col gap-1">
-            <span className="text-sm font-semibold text-fg">{dict.footer.builtBy}</span>
+            <span className="text-sm font-semibold text-on-ink">{dict.footer.builtBy}</span>
             <a
               href={`mailto:${AUTHOR_EMAIL}`}
               aria-label={`${dict.footer.contactLabel}: ${AUTHOR_EMAIL}`}
-              className="inline-flex min-h-11 items-center gap-2 self-start text-base font-semibold text-accent underline-offset-4 hover:underline"
+              className="inline-flex min-h-11 items-center gap-2 self-start text-base font-semibold text-brand underline-offset-4 hover:underline"
             >
               <MailIcon className="h-5 w-5 shrink-0" />
               <bdi>{AUTHOR_EMAIL}</bdi>
@@ -49,7 +49,7 @@ export function Footer({ dict }: { dict: Dictionary }) {
         </div>
 
         <div className="flex flex-col gap-4">
-          <h3 className="text-sm font-bold text-accent">
+          <h3 className="text-sm font-bold text-on-ink">
             {dict.footer.navigate}
           </h3>
           <ul className="flex flex-col">
@@ -57,7 +57,7 @@ export function Footer({ dict }: { dict: Dictionary }) {
               <li key={link.href}>
                 <a
                   href={link.href}
-                  className="inline-flex min-h-11 items-center text-base text-muted transition-colors duration-150 hover:text-accent"
+                  className="inline-flex min-h-11 items-center text-base text-on-ink-muted transition-colors duration-150 hover:text-on-ink"
                 >
                   {link.label}
                 </a>
@@ -67,16 +67,16 @@ export function Footer({ dict }: { dict: Dictionary }) {
         </div>
 
         <div className="flex flex-col gap-4">
-          <h3 className="text-sm font-bold text-accent">
+          <h3 className="text-sm font-bold text-on-ink">
             {dict.footer.hours}
           </h3>
-          <ul className="flex flex-col gap-2 text-sm text-muted">
+          <ul className="flex flex-col gap-2 text-sm text-on-ink-muted">
             {dayOrder.map((day) => {
               const isOpen = openDays.has(day);
               return (
                 <li key={day} className="flex justify-between gap-4">
                   <span>{dict.workingHours.days[day].short}</span>
-                  <span className={isOpen ? "text-fg" : "text-muted"}>
+                  <span className={isOpen ? "text-on-ink" : "text-on-ink-muted"}>
                     {isOpen ? <Bidi>{dict.workingHours.hoursLabel}</Bidi> : dict.workingHours.closedLabel}
                   </span>
                 </li>
@@ -86,15 +86,15 @@ export function Footer({ dict }: { dict: Dictionary }) {
         </div>
       </div>
 
-      <div className="border-t border-border">
-        <div className="container-page flex flex-col gap-2 py-6 text-center text-xs text-muted">
+      <div className="border-t border-line-dark">
+        <div className="container-page flex flex-col gap-2 py-6 text-center text-xs text-on-ink-muted">
           <p>
             {dict.footer.photoCreditsLabel}{" "}
             <a
               href={ccPhotoCredit.sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="underline underline-offset-2 hover:text-accent"
+              className="underline underline-offset-2 hover:text-on-ink"
             >
               <bdi>“{ccPhotoCredit.title}”</bdi>
             </a>{" "}
@@ -103,7 +103,7 @@ export function Footer({ dict }: { dict: Dictionary }) {
               href={ccPhotoCredit.licenseUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="underline underline-offset-2 hover:text-accent"
+              className="underline underline-offset-2 hover:text-on-ink"
             >
               <bdi>{ccPhotoCredit.license}</bdi>
             </a>

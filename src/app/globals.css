@@ -1,29 +1,54 @@
 @import "tailwindcss";
 
-/* "Warm Paper" design tokens — see DESIGN_SYSTEM.md for roles and contrast. */
+/* "Barbershop Warm" design tokens — see DESIGN_SYSTEM.md for roles and contrast. */
 :root {
-  --color-canvas: #faf7f2;
-  --color-surface: #ffffff;
-  --color-surface-2: #f3eee6;
-  --color-fg: #1c1917;
-  --color-muted: #57534e;
-  --color-disabled-fg: #6b655d;
-  --color-accent: #8a5a0b;
-  --color-accent-soft: #f6eddc;
-  --color-gold: #e3c47e;
-  --color-primary: #1c1917;
-  --color-primary-hover: #2e2a26;
-  --color-on-primary: #ffffff;
-  --color-border: #e4ddd2;
-  --color-border-strong: #8c857b;
+  /* Section grounds */
+  --color-ink: #1b1714; /* hero, header, footer */
+  --color-cocoa: #4b3f38; /* "about" band, final call to action */
+  --color-canvas: #efe6d8; /* main beige sections */
+  --color-surface: #fbf8f3; /* off-white: barbers section, cards on beige */
+  --color-surface-2: #e4d7c4; /* deeper beige: chips, disabled options */
+
+  /* Text on light grounds */
+  --color-fg: #1b1714;
+  --color-muted: #5c4f45;
+  --color-disabled-fg: #625548;
+  --color-accent: #924506; /* orange darkened for text/borders on light grounds */
+
+  /* Text on dark grounds (ink, cocoa) */
+  --color-on-ink: #f5eee4;
+  --color-on-ink-muted: #d8cbbb;
+  --color-line-dark: #3a322c;
+
+  /* The one accent: orange, for primary buttons and key highlights */
+  --color-brand: #f59e4c;
+  --color-brand-hover: #f8b26e;
+  --color-brand-edge: #b85e14; /* 1px edge so orange buttons read on light grounds */
+  --color-on-brand: #1b1714;
+  --color-brand-soft: #fce3c9; /* selected-option tint */
+
+  /* Strong neutral: selected chips, progress, badges */
+  --color-primary: #1b1714;
+  --color-primary-hover: #322a24;
+  --color-on-primary: #fbf8f3;
+
+  --color-border: #d9ccba;
+  --color-border-strong: #85766a;
   --color-error: #b42318;
-  --color-error-soft: #fef1ef;
+  --color-error-soft: #fbe9e5;
   --color-success: #15703a;
-  --color-success-soft: #ecf7f0;
-  --color-focus: #8a5a0b;
+  --color-success-soft: #e3f1e7;
+  --color-focus: #924506;
+
+  /* Display face per language: Karantina (Hebrew), Bebas Neue (English). */
+  --font-display-face: var(--font-karantina), var(--font-bebas), "Arial Narrow", sans-serif;
 
   --header-height: 56px;
   --bottom-bar-height: 72px;
+}
+
+html[lang="en"] {
+  --font-display-face: var(--font-bebas), var(--font-karantina), "Arial Narrow", sans-serif;
 }
 
 @media (min-width: 1024px) {
@@ -33,6 +58,8 @@
 }
 
 @theme inline {
+  --color-ink: var(--color-ink);
+  --color-cocoa: var(--color-cocoa);
   --color-canvas: var(--color-canvas);
   --color-surface: var(--color-surface);
   --color-surface-2: var(--color-surface-2);
@@ -40,8 +67,15 @@
   --color-muted: var(--color-muted);
   --color-disabled-fg: var(--color-disabled-fg);
   --color-accent: var(--color-accent);
-  --color-accent-soft: var(--color-accent-soft);
-  --color-gold: var(--color-gold);
+  --color-on-ink: var(--color-on-ink);
+  --color-on-ink-muted: var(--color-on-ink-muted);
+  --color-line-dark: var(--color-line-dark);
+  --color-brand: var(--color-brand);
+  --color-brand-hover: var(--color-brand-hover);
+  --color-brand-edge: var(--color-brand-edge);
+  --color-on-brand: var(--color-on-brand);
+  --color-brand-soft: var(--color-brand-soft);
+  --color-accent-soft: var(--color-brand-soft);
   --color-primary: var(--color-primary);
   --color-primary-hover: var(--color-primary-hover);
   --color-on-primary: var(--color-on-primary);
@@ -53,16 +87,17 @@
   --color-success-soft: var(--color-success-soft);
   --color-focus: var(--color-focus);
 
-  --font-sans: var(--font-assistant);
-  --font-display: var(--font-frank-ruhl);
+  --font-sans: var(--font-heebo);
+  --font-display: var(--font-display-face);
 
-  --radius-sm: 8px;
-  --radius-md: 10px;
-  --radius-lg: 12px;
-  --radius-xl: 20px;
+  --radius-sm: 12px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 16px;
 
-  --shadow-card: 0 1px 2px rgb(28 25 23 / 0.06), 0 8px 24px rgb(28 25 23 / 0.06);
-  --shadow-raised: 0 2px 4px rgb(28 25 23 / 0.08), 0 16px 40px rgb(28 25 23 / 0.1);
+  /* Flat by design: 1px borders separate surfaces; shadow only for floating UI and hover lift. */
+  --shadow-card: none;
+  --shadow-raised: 0 8px 24px rgb(27 23 20 / 0.12);
 }
 
 html {
@@ -202,9 +237,35 @@ a,
 }
 
 /*
- * Card motion — Services and Barbers (see "Motion" in DESIGN_SYSTEM.md).
  * Unlayered on purpose: these rules must win over Tailwind utilities (which
- * live in a cascade layer), e.g. the CTA's bg-surface on hover.
+ * live in a cascade layer). See "Motion" in DESIGN_SYSTEM.md.
+ */
+
+/* ---- Tones ----
+ * Dark grounds (ink, cocoa) switch the focus ring to the orange brand colour,
+ * which has 8:1 contrast there; light cards placed inside them switch back. */
+.tone-dark :focus-visible {
+  outline-color: var(--color-brand);
+}
+.tone-dark .tone-light :focus-visible {
+  outline-color: var(--color-focus);
+}
+
+/* Native <select> styled like .field, with a chevron on the inline-end side. */
+.field-select {
+  appearance: none;
+  padding-inline-end: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231b1714' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  cursor: pointer;
+}
+[dir="rtl"] .field-select {
+  background-position: left 14px center;
+}
+
+/*
+ * Motion — price list rows and barber cards.
  * Only transform, opacity and box-shadow animate.
  *   - Hover effects: pointer devices only (hover: hover and pointer: fine).
  *   - Keyboard focus: the same effects, on any device.
@@ -213,151 +274,147 @@ a,
  */
 :root {
   --ease-out-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
-  --shadow-card-lift: 0 4px 10px rgb(28 25 23 / 0.06), 0 18px 40px rgb(138 90 11 / 0.14);
+  --shadow-card-lift: 0 12px 28px rgb(27 23 20 / 0.12);
 }
 
-.service-card,
+/* Price list row: a highlight layer fades in behind the row. */
+.price-row {
+  position: relative;
+  isolation: isolate;
+  transition: transform 200ms var(--ease-out-soft);
+}
+.price-row::before {
+  content: "";
+  position: absolute;
+  inset: 0 -12px;
+  z-index: -1;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out-soft);
+}
+.price-row__thumb img {
+  transition: transform 600ms var(--ease-out-soft);
+}
+.price-row__price,
+.price-row__arrow {
+  display: inline-block;
+  transition: transform 250ms var(--ease-out-soft);
+}
+
 .barber-card {
-  box-shadow: var(--shadow-card);
   transition:
     transform 250ms var(--ease-out-soft),
     box-shadow 250ms var(--ease-out-soft);
 }
-
-/* Thin gold outline that fades in on top of the card (and its photo). */
-.service-card::after {
+/* Thin orange edge that fades in around the card. */
+.barber-card::after {
   content: "";
   position: absolute;
   inset: 0;
   z-index: 1;
-  border: 1px solid var(--color-accent);
+  border: 1px solid var(--color-brand-edge);
   border-radius: inherit;
   opacity: 0;
   pointer-events: none;
   transition: opacity 250ms var(--ease-out-soft);
 }
-
-.service-card__media img,
 .barber-card__photo {
   transition: transform 600ms var(--ease-out-soft);
 }
 
-.service-card__price {
-  display: inline-block;
-  transition: transform 250ms var(--ease-out-soft);
-}
-
-/* Gold ring around the barber photo: fades and settles in from slightly smaller. */
-.barber-card__ring {
-  position: absolute;
-  inset: -5px;
-  border-radius: 9999px;
-  border: 2px solid var(--color-accent);
-  opacity: 0;
-  transform: scale(0.88);
-  transition:
-    opacity 300ms var(--ease-out-soft),
-    transform 300ms var(--ease-out-soft);
-}
-
-/* Gold underline under the barber's name, growing from the start edge. */
+/* Orange underline under the barber's name, growing from the start edge. */
 .barber-card__name {
   position: relative;
   display: inline-block;
 }
-
 .barber-card__name::after {
   content: "";
   position: absolute;
   inset-inline: 0;
-  bottom: -3px;
-  height: 2px;
+  bottom: 0;
+  height: 3px;
   border-radius: 2px;
-  background: var(--color-accent);
+  background: var(--color-brand);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 300ms var(--ease-out-soft);
 }
-
 [dir="rtl"] .barber-card__name::after {
   transform-origin: right;
 }
 
-/* ---- Active state (shared by hover on pointer devices and keyboard focus) ---- */
+/* ---- Active state: hover on pointer devices ---- */
 @media (hover: hover) and (pointer: fine) {
-  .service-card:hover,
+  .price-row:hover::before {
+    opacity: 1;
+  }
+  .price-row:hover .price-row__thumb img,
+  .barber-card:hover .barber-card__photo {
+    transform: scale(1.06);
+  }
+  .price-row:hover .price-row__price {
+    transform: scale(1.05);
+  }
+  .price-row:hover .price-row__arrow {
+    transform: translateX(4px);
+  }
+  [dir="rtl"] .price-row:hover .price-row__arrow {
+    transform: translateX(-4px);
+  }
   .barber-card:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-card-lift);
   }
-  .service-card:hover::after {
+  .barber-card:hover::after {
     opacity: 1;
-  }
-  .service-card:hover .service-card__media img,
-  .barber-card:hover .barber-card__photo {
-    transform: scale(1.06);
-  }
-  .service-card:hover .service-card__price {
-    transform: scale(1.05);
-  }
-  .service-card:hover .service-card__cta {
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
-    color: var(--color-on-primary);
-  }
-  .barber-card:hover .barber-card__ring {
-    opacity: 1;
-    transform: none;
   }
   .barber-card:hover .barber-card__name::after {
     transform: scaleX(1);
   }
 }
 
-/* Keyboard focus mirrors hover (:focus-visible only, so a tap doesn't leave cards "stuck" lifted). */
-.service-card:has(:focus-visible),
-.barber-card:focus-visible {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-card-lift);
-}
-.barber-card:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 3px;
-}
-.service-card:has(:focus-visible)::after {
+/* ---- Keyboard focus mirrors hover (:focus-visible only, so taps don't leave rows "stuck") ---- */
+.price-row:focus-visible::before {
   opacity: 1;
 }
-.service-card:has(:focus-visible) .service-card__media img,
+.price-row:focus-visible .price-row__thumb img,
 .barber-card:focus-visible .barber-card__photo {
   transform: scale(1.06);
 }
-.service-card:has(:focus-visible) .service-card__price {
+.price-row:focus-visible .price-row__price {
   transform: scale(1.05);
 }
-.service-card:has(:focus-visible) .service-card__cta {
-  background-color: var(--color-primary);
-  border-color: var(--color-primary);
-  color: var(--color-on-primary);
+.price-row:focus-visible .price-row__arrow {
+  transform: translateX(4px);
 }
-.barber-card:focus-visible .barber-card__ring {
+[dir="rtl"] .price-row:focus-visible .price-row__arrow {
+  transform: translateX(-4px);
+}
+.barber-card:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card-lift);
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+.barber-card:focus-visible::after {
   opacity: 1;
-  transform: none;
 }
 .barber-card:focus-visible .barber-card__name::after {
   transform: scaleX(1);
 }
 
 /* Touch press feedback. */
-.service-card:active,
+.price-row:active,
 .barber-card:active {
   transform: scale(0.98);
   transition-duration: 120ms;
 }
 
 /* ---- Scroll reveal ----
- * Cards are never hidden up front: ScrollReveal (a client component) only sets
- * data-reveal="in" as a card enters the viewport, which plays this one-shot
- * animation. Without JavaScript, nothing is ever hidden. */
+ * Nothing is hidden up front: ScrollReveal (a client component) only sets
+ * data-reveal="in" as an element enters the viewport, which plays this
+ * one-shot animation. Without JavaScript, nothing is ever hidden. */
 @keyframes card-reveal {
   from {
     opacity: 0;
@@ -371,18 +428,16 @@ a,
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .service-card,
+  .price-row,
+  .price-row:active,
   .barber-card,
-  .service-card:hover,
   .barber-card:hover,
-  .service-card:has(:focus-visible),
   .barber-card:focus-visible,
-  .service-card:active,
   .barber-card:active,
-  .service-card .service-card__media img,
-  .barber-card .barber-card__photo,
-  .service-card .service-card__price,
-  .barber-card .barber-card__ring {
+  .price-row .price-row__thumb img,
+  .price-row .price-row__price,
+  .price-row .price-row__arrow,
+  .barber-card .barber-card__photo {
     transform: none !important;
   }
   [data-reveal="in"] {

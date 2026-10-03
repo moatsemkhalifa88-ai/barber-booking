@@ -57,13 +57,17 @@ Every Hebrew string on the site and in the emails, grouped by section. It is gen
 | Key | Hebrew |
 |---|---|
 | `badge` | מספרת בוטיק |
-| `titleLead` | תספורת מדויקת, |
-| `titleHighlight` | בשעה שנוחה לכם. |
+| `titleLead` | מסורת שפוגשת |
+| `titleHighlight` | סטייל מודרני |
 | `subtitle` | שלושה ספרים מקצועיים, יחס אישי וזמן אמיתי בכל ביקור. בוחרים שירות, יום ושעה – והכיסא שמור לכם. |
 | `subtitleShort` | יחס אישי, דיוק בכל פרט, ותור שנקבע בתוך דקה. |
 | `imageAlt` | ספר מסדר במספריים זקן של לקוח, במספרה באור חמים ועמום |
 | `ctaBook` | הזמינו תור |
-| `ctaServices` | שירותים ומחירים |
+| `ctaServices` | למחירון |
+| `quickBookTitle` | הזמנה מהירה |
+| `quickBookService` | שירות |
+| `quickBookDay` | יום |
+| `quickBookCta` | הזמינו תור |
 | `statBarbersLabel` | ספרים |
 | `statBarbersValue` | 3 |
 | `statServicesLabel` | שירותים |
@@ -76,22 +80,22 @@ Every Hebrew string on the site and in the emails, grouped by section. It is gen
 | Key | Hebrew |
 |---|---|
 | `eyebrow` | מי אנחנו |
-| `title` | תספורת היא לא רק עניין של שיער. |
+| `title` | שירות שמעבר לציפיות |
 | `description` | מועתסם הקים את MOATSEM מתוך אמונה פשוטה: תספורת טובה מתחילה בהקשבה. אצלנו לא ממהרים – מקשיבים, מייעצים ועובדים בדיוק, כדי שתקומו מהכיסא עם מראה חד והרגשה מצוינת. |
-| `pillars[1].title` | דיוק |
-| `pillars[1].description` | כל קו, פייד וגימור – מדויקים ועקביים, מהתספורת הראשונה ועד הבאה. |
-| `pillars[2].title` | יחס אישי |
-| `pillars[2].description` | אווירה רגועה, זמן אמיתי בכל ביקור והקשבה למה שאתם רוצים. |
-| `pillars[3].title` | סטנדרט גבוה |
-| `pillars[3].description` | כלים איכותיים, הקפדה על היגיינה ותשומת לב לכל פרט. |
+| `hoursLabel` | שעות פעילות |
+| `openDaysValue` | א׳–ה׳ |
+| `closedDaysValue` | ו׳–ש׳ · סגור |
+| `emailLabel` | אימייל |
 
 ## Services
 
 | Key | Hebrew |
 |---|---|
 | `eyebrow` | השירותים שלנו |
-| `title` | שירותים ומחירים |
+| `title` | המחירון שלנו |
 | `description` | תפריט קצר וממוקד, וכל שירות מקבל את מלוא תשומת הלב. |
+| `bookShort` | הזמינו |
+| `bookServiceAria` | הזמינו {name}, {duration}, {price} |
 | `minutesSuffix` | דק׳ |
 | `bookThisService` | הזמינו את השירות |
 | `imageAlt` | {name} ב-MOATSEM |
@@ -113,9 +117,6 @@ Every Hebrew string on the site and in the emails, grouped by section. It is gen
 | `title` | הספרים שלנו |
 | `description` | שלושה ספרים מקצועיים, סטנדרט אחד. |
 | `imageAlt` | {name}, {role} ב-MOATSEM |
-| `items.moatsem.bio` | המייסד של MOATSEM. יותר מעשור של תספורות מדויקות, ויד אישית בכל סגנון שהמספרה מזוהה איתו. |
-| `items.amir.bio` | מומחה לפיידים ולקווים נקיים. עובד ברוגע, בריכוז ובתשומת לב לכל פרט. |
-| `items.ibrahim.bio` | מתמחה בתספורות מודרניות עם טקסטורה, באווירה נינוחה ומזמינה. |
 | `nameByEnglish.Moatsem` | מועתסם |
 | `nameByEnglish.Amir` | אמיר |
 | `nameByEnglish.Ibrahim` | איברהים |
@@ -150,8 +151,8 @@ Every Hebrew string on the site and in the emails, grouped by section. It is gen
 
 | Key | Hebrew |
 |---|---|
-| `eyebrow` | מבפנים |
-| `title` | גלריה |
+| `eyebrow` | גלריה |
+| `title` | מהעבודות שלנו |
 | `description` | הצצה למספרה ולעבודה שלנו. |
 | `alt.1` | ספר מסדר זקן של לקוח במספרה באור עמום |
 | `alt.2` | מבט מלמעלה על ספר שעושה פייד במכונת תספורת |

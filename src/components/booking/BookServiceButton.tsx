@@ -1,25 +1,35 @@
 "use client";
 
-import { Button } from "@/components/ui/Button";
+import type { ReactNode } from "react";
 import { BOOK_SERVICE_EVENT, type BookServiceEventDetail } from "@/components/booking/BookingWidget";
 
 /**
- * "Book this service": pre-selects the service in the booking flow and jumps
- * straight to choosing a day and time. Without JavaScript it is still a plain
- * link to the booking section.
+ * "Book this service" link: pre-selects the service in the booking flow and
+ * jumps straight to choosing a day and time. Without JavaScript it is still a
+ * plain link to the booking section. Used for whole price-list rows.
  */
-export function BookServiceButton({ serviceName, label }: { serviceName: string; label: string }) {
+export function BookServiceLink({
+  serviceName,
+  className = "",
+  ariaLabel,
+  children,
+}: {
+  serviceName: string;
+  className?: string;
+  ariaLabel?: string;
+  children: ReactNode;
+}) {
   return (
-    <Button
+    <a
       href="#booking"
-      variant="secondary"
-      className="service-card__cta mt-1 w-full"
+      aria-label={ariaLabel}
+      className={className}
       onClick={(event) => {
         event.preventDefault();
         window.dispatchEvent(new CustomEvent<BookServiceEventDetail>(BOOK_SERVICE_EVENT, { detail: { serviceName } }));
       }}
     >
-      {label}
-    </Button>
+      {children}
+    </a>
   );
 }

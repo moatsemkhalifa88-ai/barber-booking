@@ -23,9 +23,10 @@ interface BookingWidgetProps {
   isBookingConfigured: boolean;
 }
 
-/** Fired by "Book this service" buttons elsewhere on the page (see BookServiceButton). */
+/** Fired by "Book this service" buttons and the hero quick-booking card (see BookServiceButton, QuickBookCard). */
 export const BOOK_SERVICE_EVENT = "moatsem:book-service";
-export type BookServiceEventDetail = { serviceName: string };
+/** `date` ("YYYY-MM-DD", shop time) is optional; when given and open, it is pre-selected too. */
+export type BookServiceEventDetail = { serviceName: string; date?: string };
 
 const NOT_CONFIGURED_MESSAGE_DEV =
   "Development notice: this is a UI preview only — either Supabase env vars are missing (set NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, and SUPABASE_SERVICE_ROLE_KEY in .env.local) or the services table doesn't match the app's expected schema yet (check for pending migrations). See the server console for the exact error.";
@@ -146,11 +147,12 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
   // "Book this service" buttons elsewhere on the page pre-select a service and jump to step 2.
   useEffect(() => {
     function handleBookService(event: Event) {
-      const { serviceName } = (event as CustomEvent<BookServiceEventDetail>).detail;
+      const { serviceName, date: requestedDate } = (event as CustomEvent<BookServiceEventDetail>).detail;
       const service = services.find((candidate) => candidate.name === serviceName);
       if (!service) return;
       setConfirmation(null);
       setServiceId(service.id);
+      if (requestedDate && days.some((day) => day.date === requestedDate && day.isOpen)) setDate(requestedDate);
       setTime(null);
       setBarberId(null);
       setEarliestMessage(null);
@@ -158,7 +160,7 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
     }
     window.addEventListener(BOOK_SERVICE_EVENT, handleBookService);
     return () => window.removeEventListener(BOOK_SERVICE_EVENT, handleBookService);
-  }, [services, goToStep]);
+  }, [services, days, goToStep]);
 
   // ---------------------------------------------------------------------------
   // Selections.
@@ -328,7 +330,7 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
 
   if (confirmation) {
     return (
-      <section ref={sectionRef} id="booking" className="section-y border-b border-border bg-surface-2">
+      <section ref={sectionRef} id="booking" className="section-y bg-surface">
         <div className="container-page flex max-w-2xl flex-col gap-5">
           <BookingConfirmation confirmation={confirmation} headingRef={headingRef} onStartOver={startOver} />
         </div>
@@ -341,7 +343,7 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
   // ---------------------------------------------------------------------------
 
   return (
-    <section ref={sectionRef} id="booking" className="section-y border-b border-border bg-surface-2">
+    <section ref={sectionRef} id="booking" className="section-y bg-surface">
       <div className="container-page flex flex-col gap-6 lg:gap-10">
         <SectionHeading eyebrow={t.eyebrow} title={t.title} description={t.description} />
 
@@ -351,7 +353,7 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
           </p>
         ) : null}
 
-        <div className="mx-auto w-full max-w-3xl rounded-lg border border-border bg-surface shadow-card">
+        <div className="mx-auto w-full max-w-3xl rounded-lg border border-border bg-canvas">
           {/* Progress */}
           <div className="flex flex-col gap-3 border-b border-border p-4 sm:p-6">
             <p className="text-sm font-semibold text-muted">
@@ -365,7 +367,7 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
                 />
               ))}
             </div>
-            <h3 ref={headingRef} tabIndex={-1} className="font-display text-2xl font-bold text-fg outline-none">
+            <h3 ref={headingRef} tabIndex={-1} className="font-display text-[34px] leading-[0.95] font-bold text-fg outline-none">
               {stepTitles[step]}
             </h3>
           </div>
@@ -635,7 +637,7 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
           </div>
 
           {/* Step bar: sticks to the bottom of the screen on phones while the booking flow is in view; static on desktop. */}
-          <div className="sticky bottom-0 z-30 flex items-center gap-3 rounded-b-lg border-t border-border bg-surface/95 px-4 pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] shadow-raised backdrop-blur-md sm:px-6 lg:static lg:pb-3 lg:shadow-none">
+          <div className="sticky bottom-0 z-30 flex items-center gap-3 rounded-b-lg border-t border-border bg-canvas/95 px-4 pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] shadow-raised backdrop-blur-md sm:px-6 lg:static lg:pb-3 lg:shadow-none">
             {step > 1 ? (
               <button
                 type="button"
@@ -752,16 +754,16 @@ function BookingConfirmation({
         <CheckIcon className="h-8 w-8" />
       </span>
       <div role="status" className="flex flex-col gap-2">
-        <h2 ref={headingRef} tabIndex={-1} className="font-display text-3xl font-bold text-fg outline-none sm:text-4xl">
+        <h2 ref={headingRef} tabIndex={-1} className="font-display text-[48px] leading-[0.95] font-bold text-fg outline-none">
           {t.confirmedHeading}
         </h2>
         <p className="text-base text-muted">{format(t.confirmedBody, { name: confirmation.customerName })}</p>
       </div>
 
-      <div className="flex w-full flex-col gap-4 rounded-lg border border-border bg-surface p-4 text-start shadow-card sm:p-6">
+      <div className="flex w-full flex-col gap-4 rounded-lg border border-border bg-canvas p-4 text-start sm:p-6">
         <div className="flex flex-col items-center gap-3 rounded-md bg-accent-soft p-4">
           <span className="text-sm font-semibold text-accent">{t.referenceLabel}</span>
-          <span dir="ltr" className="font-display text-3xl font-bold tracking-wider text-fg tabular-nums sm:text-4xl">
+          <span dir="ltr" className="text-3xl font-bold tracking-wider text-fg tabular-nums sm:text-4xl">
             {confirmation.bookingReference}
           </span>
           <Button variant="secondary" onClick={copyReference} aria-label={t.copyAria} className="min-w-32">
@@ -790,7 +792,7 @@ function BookingConfirmation({
         </Button>
       </div>
 
-      <p className="w-full rounded-lg bg-surface p-3 text-sm text-muted">{t.demoEmailNotice}</p>
+      <p className="w-full rounded-lg bg-canvas p-3 text-sm text-muted">{t.demoEmailNotice}</p>
 
       <Button variant="ghost" onClick={onStartOver}>
         {t.bookAnother}

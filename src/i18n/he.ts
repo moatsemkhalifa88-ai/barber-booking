@@ -41,14 +41,18 @@ export const he: Dictionary = {
 
   hero: {
     badge: "מספרת בוטיק",
-    titleLead: "תספורת מדויקת,",
-    titleHighlight: "בשעה שנוחה לכם.",
+    titleLead: "מסורת שפוגשת",
+    titleHighlight: "סטייל מודרני",
     subtitle:
       "שלושה ספרים מקצועיים, יחס אישי וזמן אמיתי בכל ביקור. בוחרים שירות, יום ושעה – והכיסא שמור לכם.",
     subtitleShort: "יחס אישי, דיוק בכל פרט, ותור שנקבע בתוך דקה.",
     imageAlt: "ספר מסדר במספריים זקן של לקוח, במספרה באור חמים ועמום",
     ctaBook: "הזמינו תור",
-    ctaServices: "שירותים ומחירים",
+    ctaServices: "למחירון",
+    quickBookTitle: "הזמנה מהירה",
+    quickBookService: "שירות",
+    quickBookDay: "יום",
+    quickBookCta: "הזמינו תור",
     statBarbersLabel: "ספרים",
     statBarbersValue: "3",
     statServicesLabel: "שירותים",
@@ -59,20 +63,21 @@ export const he: Dictionary = {
 
   about: {
     eyebrow: "מי אנחנו",
-    title: "תספורת היא לא רק עניין של שיער.",
+    title: "שירות שמעבר לציפיות",
     description:
       "מועתסם הקים את MOATSEM מתוך אמונה פשוטה: תספורת טובה מתחילה בהקשבה. אצלנו לא ממהרים – מקשיבים, מייעצים ועובדים בדיוק, כדי שתקומו מהכיסא עם מראה חד והרגשה מצוינת.",
-    pillars: [
-      { title: "דיוק", description: "כל קו, פייד וגימור – מדויקים ועקביים, מהתספורת הראשונה ועד הבאה." },
-      { title: "יחס אישי", description: "אווירה רגועה, זמן אמיתי בכל ביקור והקשבה למה שאתם רוצים." },
-      { title: "סטנדרט גבוה", description: "כלים איכותיים, הקפדה על היגיינה ותשומת לב לכל פרט." },
-    ],
+    hoursLabel: "שעות פעילות",
+    openDaysValue: "א׳–ה׳",
+    closedDaysValue: "ו׳–ש׳ · סגור",
+    emailLabel: "אימייל",
   },
 
   services: {
     eyebrow: "השירותים שלנו",
-    title: "שירותים ומחירים",
+    title: "המחירון שלנו",
     description: "תפריט קצר וממוקד, וכל שירות מקבל את מלוא תשומת הלב.",
+    bookShort: "הזמינו",
+    bookServiceAria: "הזמינו {name}, {duration}, {price}",
     minutesSuffix: "דק׳",
     bookThisService: "הזמינו את השירות",
     imageAlt: "{name} ב-MOATSEM",
@@ -102,17 +107,6 @@ export const he: Dictionary = {
     title: "הספרים שלנו",
     description: "שלושה ספרים מקצועיים, סטנדרט אחד.",
     imageAlt: "{name}, {role} ב-MOATSEM",
-    items: {
-      moatsem: {
-        bio: "המייסד של MOATSEM. יותר מעשור של תספורות מדויקות, ויד אישית בכל סגנון שהמספרה מזוהה איתו.",
-      },
-      amir: {
-        bio: "מומחה לפיידים ולקווים נקיים. עובד ברוגע, בריכוז ובתשומת לב לכל פרט.",
-      },
-      ibrahim: {
-        bio: "מתמחה בתספורות מודרניות עם טקסטורה, באווירה נינוחה ומזמינה.",
-      },
-    },
     nameByEnglish: {
       Moatsem: "מועתסם",
       Amir: "אמיר",
@@ -142,8 +136,8 @@ export const he: Dictionary = {
   },
 
   gallery: {
-    eyebrow: "מבפנים",
-    title: "גלריה",
+    eyebrow: "גלריה",
+    title: "מהעבודות שלנו",
     description: "הצצה למספרה ולעבודה שלנו.",
     alt: {
       1: "ספר מסדר זקן של לקוח במספרה באור עמום",

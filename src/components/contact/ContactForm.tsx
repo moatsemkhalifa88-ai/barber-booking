@@ -44,13 +44,13 @@ export function ContactForm() {
 
   if (result) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-2xl border border-accent bg-surface-2 p-8 text-center">
+      <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-canvas p-8 text-center">
         <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-success-soft text-success">
           <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden="true">
             <path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </span>
-        <p className="font-display text-xl font-bold text-fg" role="status">
+        <p className="font-display text-[34px] leading-[0.95] font-bold text-fg" role="status">
           {dict.contact.receivedTitle}
         </p>
         <p className="max-w-sm text-sm text-muted">
@@ -62,7 +62,7 @@ export function ContactForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4 shadow-card sm:p-6">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-lg border border-border bg-canvas p-4 sm:p-6">
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField
           label={dict.contact.fullName}

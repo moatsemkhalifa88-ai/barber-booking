@@ -1,59 +1,63 @@
 import Image from "next/image";
-import { BookServiceButton } from "@/components/booking/BookServiceButton";
+import { BookServiceLink } from "@/components/booking/BookServiceButton";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { Bidi } from "@/components/ui/Bidi";
+import { ForwardIcon } from "@/components/ui/Icons";
 import { services } from "@/data/services";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, priceParts } from "@/lib/format";
 import { format, type Dictionary, type Locale } from "@/i18n";
 
+/** Price list on beige: name + duration on one side, price in the display face on the other, 1px dividers. Each row books that service. */
 export function Services({ dict, locale }: { dict: Dictionary; locale: Locale }) {
   return (
-    <section id="services" className="section-y border-b border-border bg-surface-2">
+    <section id="services" className="section-y bg-canvas">
       <div className="container-page flex flex-col gap-8 lg:gap-12">
         <SectionHeading eyebrow={dict.services.eyebrow} title={dict.services.title} description={dict.services.description} />
 
-        {/* Phones: swipe row (each card 80% wide so the next one peeks in). md+: three-column grid. */}
-        <div className="swipe-row md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:px-0">
+        <ul className="mx-auto w-full max-w-3xl">
           {services.map((service) => {
             const translated = dict.services.items[service.id];
             const name = translated?.name ?? service.name;
             const description = translated?.description ?? service.description;
+            const duration = `${service.durationMinutes} ${dict.services.minutesSuffix}`;
+            const price = formatPrice(service.priceIls, locale);
+            const parts = priceParts(service.priceIls, locale);
+            const symbol = <span className="text-xl font-bold">{parts.symbol}</span>;
 
             return (
-              <article
-                key={service.id}
-                data-reveal=""
-                className="service-card relative flex w-[80%] flex-col overflow-hidden rounded-lg border border-border bg-surface sm:w-[46%] md:w-auto"
-              >
-                <div className="service-card__media relative aspect-[16/10] w-full overflow-hidden">
-                  <Image
-                    src={service.image}
-                    alt={format(dict.services.imageAlt, { name })}
-                    fill
-                    sizes="(min-width: 768px) 33vw, 80vw"
-                    className="object-cover"
-                  />
-                </div>
-
-                <div className="flex flex-1 flex-col gap-3 p-4 lg:p-6">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <h3 className="font-display text-xl font-bold text-fg lg:text-2xl">{name}</h3>
-                    <span className="service-card__price text-xl font-bold whitespace-nowrap text-accent tabular-nums">
-                      <Bidi>{formatPrice(service.priceIls, locale)}</Bidi>
-                    </span>
-                  </div>
-                  <span className="self-start rounded-full bg-surface-2 px-2.5 py-0.5 text-sm font-semibold text-muted">
-                    <bdi>
-                      {service.durationMinutes} {dict.services.minutesSuffix}
-                    </bdi>
+              <li key={service.id} data-reveal="" className="border-b border-border first:border-t">
+                <BookServiceLink
+                  serviceName={service.name}
+                  ariaLabel={format(dict.services.bookServiceAria, { name, duration, price })}
+                  className="price-row flex min-h-20 items-center gap-4 py-4"
+                >
+                  <span className="price-row__thumb relative h-16 w-16 shrink-0 overflow-hidden rounded-md sm:h-20 sm:w-20">
+                    <Image src={service.image} alt="" fill sizes="80px" className="object-cover" />
                   </span>
-                  <p className="line-clamp-2 flex-1 text-[15px] leading-relaxed text-muted">{description}</p>
-                  <BookServiceButton serviceName={service.name} label={dict.services.bookThisService} />
-                </div>
-              </article>
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="text-lg font-bold text-fg sm:text-xl">{name}</span>
+                    <span className="text-sm text-muted">
+                      <bdi>{duration}</bdi>
+                      <span className="hidden sm:inline"> · {description}</span>
+                    </span>
+                  </span>
+                  <span className="flex shrink-0 items-center gap-3">
+                    {/* Amount in the display face, ₪ smaller in the body face (Karantina's ₪ is very heavy). */}
+                    <span dir="ltr" className="price-row__price inline-flex items-baseline gap-1 text-fg">
+                      {parts.symbolFirst ? symbol : null}
+                      <span className="font-display text-[40px] leading-none font-bold tabular-nums">{parts.amount}</span>
+                      {parts.symbolFirst ? null : symbol}
+                    </span>
+                    <span className="hidden items-center gap-1 text-sm font-bold text-accent sm:inline-flex">
+                      {dict.services.bookShort}
+                      <ForwardIcon className="price-row__arrow h-4 w-4" />
+                    </span>
+                    <ForwardIcon className="price-row__arrow h-5 w-5 text-accent sm:hidden" />
+                  </span>
+                </BookServiceLink>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </div>
     </section>
   );

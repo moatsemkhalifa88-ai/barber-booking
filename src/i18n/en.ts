@@ -40,14 +40,18 @@ export const en = {
 
   hero: {
     badge: "Boutique Barbershop",
-    titleLead: "A precise cut,",
-    titleHighlight: "at a time that suits you.",
+    titleLead: "Tradition meets",
+    titleHighlight: "modern style",
     subtitle:
       "Three professional barbers, personal attention and real time for every client. Choose a service, a day and a time — and your chair is reserved.",
     subtitleShort: "Personal attention, precision in every detail, and an appointment booked in a minute.",
     imageAlt: "A barber trimming a client's beard with scissors in a warm, dimly lit barbershop",
     ctaBook: "Book Now",
-    ctaServices: "Services & Prices",
+    ctaServices: "See Prices",
+    quickBookTitle: "Quick booking",
+    quickBookService: "Service",
+    quickBookDay: "Day",
+    quickBookCta: "Book Now",
     statBarbersLabel: "Barbers",
     statBarbersValue: "3",
     statServicesLabel: "Services",
@@ -58,20 +62,21 @@ export const en = {
 
   about: {
     eyebrow: "About Us",
-    title: "A haircut is about more than hair.",
+    title: "Service beyond expectations",
     description:
       "Moatsem founded MOATSEM on a simple belief: a good haircut starts with listening. We never rush — we listen, advise and work with precision, so you leave the chair looking sharp and feeling great.",
-    pillars: [
-      { title: "Precision", description: "Every line, fade and edge — exact and consistent, from your first cut to the next." },
-      { title: "Personal care", description: "A calm atmosphere, real time for every client, and attention to what you want." },
-      { title: "High standards", description: "Quality tools, spotless hygiene and attention to every detail." },
-    ],
+    hoursLabel: "Opening hours",
+    openDaysValue: "Sun–Thu",
+    closedDaysValue: "Fri–Sat · Closed",
+    emailLabel: "Email",
   },
 
   services: {
     eyebrow: "Our Services",
-    title: "Services & Prices",
+    title: "Our Prices",
     description: "A short, focused menu. Every service gets our full attention.",
+    bookShort: "Book",
+    bookServiceAria: "Book {name}, {duration}, {price}",
     minutesSuffix: "min",
     bookThisService: "Book This Service",
     imageAlt: "{name} at MOATSEM",
@@ -103,17 +108,6 @@ export const en = {
     title: "Our Barbers",
     description: "Three professional barbers, one standard.",
     imageAlt: "{name}, {role} at MOATSEM",
-    items: {
-      moatsem: {
-        bio: "Founder of MOATSEM. Over a decade of precise haircuts, and a personal hand in every style the shop is known for.",
-      },
-      amir: {
-        bio: "A specialist in fades and clean lines. Calm, focused and attentive to every detail.",
-      },
-      ibrahim: {
-        bio: "Specializes in modern, textured cuts, in a relaxed and welcoming atmosphere.",
-      },
-    } as Record<string, { bio: string }>,
     nameByEnglish: {
       Moatsem: "Moatsem",
       Amir: "Amir",
@@ -143,8 +137,8 @@ export const en = {
   },
 
   gallery: {
-    eyebrow: "Inside the Shop",
-    title: "Gallery",
+    eyebrow: "Gallery",
+    title: "From Our Work",
     description: "A glimpse of the shop and our work.",
     alt: {
       1: "A barber trimming a client's beard in a dimly lit barbershop",

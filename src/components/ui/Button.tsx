@@ -6,13 +6,14 @@ const baseClasses =
   "inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-md px-6 text-base font-semibold transition-colors duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100";
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-on-primary hover:bg-primary-hover",
+  // The one accent: orange fill, dark text (8.4:1), 1px darker edge so it reads on light grounds.
+  primary: "border border-brand-edge bg-brand text-on-brand hover:bg-brand-hover",
   secondary: "border border-border-strong bg-surface text-fg hover:border-fg hover:bg-surface-2",
   ghost: "min-h-11 px-2 text-accent underline-offset-4 hover:underline",
   danger: "border border-error bg-surface text-error hover:bg-error-soft",
   dangerSolid: "bg-error text-on-primary hover:bg-error/90",
-  onDark: "bg-surface text-fg hover:bg-canvas",
-  outlineOnDark: "border border-on-primary/70 text-on-primary hover:bg-on-primary/10",
+  onDark: "border border-brand-edge bg-brand text-on-brand hover:bg-brand-hover",
+  outlineOnDark: "border border-on-ink/60 text-on-ink hover:bg-on-ink/10",
 };
 
 interface ButtonBaseProps {

@@ -72,7 +72,7 @@ export function Header() {
 
   return (
     <>
-    <header className="sticky top-0 z-40 border-b border-border bg-surface/90 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+    <header className="tone-dark sticky top-0 z-40 border-b border-line-dark bg-ink pt-[env(safe-area-inset-top)]">
       <div className="container-page flex h-[var(--header-height)] items-center justify-between gap-3">
         <Logo />
 
@@ -81,7 +81,7 @@ export function Header() {
             <a
               key={link.href}
               href={link.href}
-              className="text-[15px] font-semibold whitespace-nowrap text-fg transition-colors duration-150 hover:text-accent"
+              className="text-[15px] font-semibold whitespace-nowrap text-on-ink transition-colors duration-150 hover:text-brand"
             >
               {link.label}
             </a>
@@ -100,7 +100,7 @@ export function Header() {
           <button
             ref={toggleRef}
             type="button"
-            className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-md border border-border-strong bg-surface text-fg"
+            className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-md border border-on-ink/40 text-on-ink hover:bg-on-ink/10"
             aria-expanded={isMenuOpen}
             aria-controls="mobile-menu"
             aria-label={dict.nav.openMenu}
@@ -113,7 +113,7 @@ export function Header() {
 
     </header>
 
-      {/* Portalled to <body>: the header's backdrop blur would otherwise trap this fixed overlay inside the header. */}
+      {/* Portalled to <body>: keeps this fixed overlay independent of the header's stacking and layout. */}
       {isMenuOpen
         ? createPortal(
         <div
@@ -122,13 +122,13 @@ export function Header() {
           role="dialog"
           aria-modal="true"
           aria-label={dict.nav.mobileMenuLabel}
-          className="fixed inset-0 z-[60] flex h-dvh flex-col bg-canvas pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] lg:hidden"
+          className="tone-dark fixed inset-0 z-[60] flex h-dvh flex-col bg-ink pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] lg:hidden"
         >
-          <div className="container-page flex h-[var(--header-height)] shrink-0 items-center justify-between gap-3 border-b border-border">
+          <div className="container-page flex h-[var(--header-height)] shrink-0 items-center justify-between gap-3 border-b border-line-dark">
             <Logo />
             <button
               type="button"
-              className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-md border border-border-strong bg-surface text-fg"
+              className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-md border border-on-ink/40 text-on-ink hover:bg-on-ink/10"
               aria-label={dict.nav.closeMenu}
               onClick={() => setIsMenuOpen(false)}
             >
@@ -139,25 +139,25 @@ export function Header() {
           <nav aria-label={dict.nav.mobileMenuLabel} className="container-page flex-1 overflow-y-auto py-2">
             <ul className="flex flex-col">
               {menuLinks.map((link) => (
-                <li key={link.href} className="border-b border-border">
+                <li key={link.href} className="border-b border-line-dark">
                   <a
                     href={link.href}
                     onClick={() => setIsMenuOpen(false)}
-                    className="flex min-h-14 items-center justify-between gap-3 text-xl font-bold text-fg"
+                    className="flex min-h-14 items-center justify-between gap-3 text-xl font-bold text-on-ink"
                   >
                     {link.label}
-                    <ForwardIcon className="h-5 w-5 text-muted" />
+                    <ForwardIcon className="h-5 w-5 text-on-ink-muted" />
                   </a>
                 </li>
               ))}
             </ul>
             <div className="flex items-center justify-between gap-3 py-5">
-              <span className="text-base font-semibold text-muted">{dict.nav.languageLabel}</span>
+              <span className="text-base font-semibold text-on-ink-muted">{dict.nav.languageLabel}</span>
               <LanguageSwitcher />
             </div>
           </nav>
 
-          <div className="container-page shrink-0 border-t border-border py-3">
+          <div className="container-page shrink-0 border-t border-line-dark py-3">
             <Button href="/#booking" variant="primary" className="w-full" onClick={() => setIsMenuOpen(false)}>
               {dict.nav.bookNow}
             </Button>

@@ -33,7 +33,7 @@ export default async function ManageBookingPage({
     <>
       <Header />
       <main className="flex-1">
-        <section id="manage" className="border-b border-border bg-surface-2">
+        <section id="manage" className="bg-canvas">
           <div className="container-page section-y flex max-w-xl flex-col gap-6">
             <Link href="/" className="inline-flex min-h-11 items-center gap-1.5 self-start text-base font-semibold text-accent">
               <BackIcon className="h-4 w-4" />

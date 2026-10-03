@@ -9,11 +9,11 @@ export function WorkingHours({ dict }: { dict: Dictionary }) {
   const todayIndex = dayOfWeekForDate(nowInShopTimezone().date);
 
   return (
-    <section id="hours" className="section-y border-b border-border bg-surface">
+    <section id="hours" className="section-y bg-canvas">
       <div className="container-page flex flex-col items-center gap-8">
         <SectionHeading eyebrow={dict.workingHours.eyebrow} title={dict.workingHours.title} />
 
-        <dl className="w-full max-w-md divide-y divide-border overflow-hidden rounded-lg border border-border bg-canvas">
+        <dl className="w-full max-w-md divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
           {weekHours.map((day, index) => {
             const isToday = index === todayIndex;
             return (

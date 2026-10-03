@@ -40,9 +40,9 @@ export default async function Home() {
         <About dict={dict} />
         <Services dict={dict} locale={locale} />
         <Barbers dict={dict} />
+        <GalleryPreview dict={dict} />
         <BookingWidget services={services} isBookingConfigured={isBookingConfigured} />
         <WorkingHours dict={dict} />
-        <GalleryPreview dict={dict} />
         <Contact dict={dict} />
         <FinalCTA dict={dict} />
       </main>

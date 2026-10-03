@@ -1,41 +1,53 @@
 import type { ReactNode } from "react";
+import { Bidi } from "@/components/ui/Bidi";
+import { ClockIcon, MailIcon } from "@/components/ui/Icons";
 import type { Dictionary } from "@/i18n";
 
-const pillarIcons: ReactNode[] = [
-  // Precision: a ruler-like line with ticks.
-  <path key="precision" d="M3 16.5L16.5 3l4.5 4.5L7.5 21 3 16.5zM7.5 12l2 2M10.5 9l2 2M13.5 6l2 2" />,
-  // Personal care: a person.
-  <path key="care" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0" />,
-  // High standards: a star.
-  <path key="standard" d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6-4.5-4.2 6.1-.7L12 3z" />,
-];
+/** Same address as the footer's contact link. */
+const CONTACT_EMAIL = "moatsem.khalifa88@gmail.com";
 
-export function About({ dict }: { dict: Dictionary }) {
+function InfoRow({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
   return (
-    <section id="about" className="section-y border-b border-border bg-surface">
+    <li className="flex items-center gap-4 border-b border-on-ink/15 py-4 first:border-t">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink/40 text-brand">{icon}</span>
+      <div className="flex min-w-0 flex-col">
+        <span className="text-sm text-on-ink-muted">{label}</span>
+        {children}
+      </div>
+    </li>
+  );
+}
+
+/** Chocolate band: short story plus practical info (hours, email). No address or phone — the shop is fictional. */
+export function About({ dict }: { dict: Dictionary }) {
+  const t = dict.about;
+
+  return (
+    <section id="about" className="tone-dark section-y bg-cocoa text-on-ink">
       <div className="container-page grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-16">
         <div className="flex flex-col gap-3">
-          <span className="text-sm font-semibold text-accent">{dict.about.eyebrow}</span>
-          <h2 className="font-display text-[1.75rem] leading-tight font-bold text-balance text-fg sm:text-4xl lg:text-[2.5rem]">
-            {dict.about.title}
-          </h2>
-          <p className="max-w-lg text-base leading-relaxed text-muted sm:text-lg">{dict.about.description}</p>
+          <span className="text-sm font-bold text-brand">{t.eyebrow}</span>
+          <h2 className="font-display text-[44px] leading-[0.95] font-bold text-balance lg:text-[48px]">{t.title}</h2>
+          <p className="max-w-lg text-base leading-relaxed text-on-ink-muted sm:text-lg">{t.description}</p>
         </div>
 
-        <ul className="flex flex-col gap-3">
-          {dict.about.pillars.map((pillar, index) => (
-            <li key={pillar.title} className="flex gap-4 rounded-lg border border-border bg-canvas p-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
-                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  {pillarIcons[index]}
-                </svg>
-              </span>
-              <div className="flex flex-col gap-0.5">
-                <h3 className="text-lg font-bold text-fg">{pillar.title}</h3>
-                <p className="text-[15px] leading-relaxed text-muted">{pillar.description}</p>
-              </div>
-            </li>
-          ))}
+        <ul className="flex flex-col">
+          <InfoRow icon={<ClockIcon className="h-5 w-5" />} label={t.hoursLabel}>
+            <span className="text-base font-semibold">
+              <bdi>{t.openDaysValue}</bdi> · <Bidi>{dict.workingHours.hoursLabel}</Bidi>
+            </span>
+            <span className="text-base text-on-ink-muted">
+              <bdi>{t.closedDaysValue}</bdi>
+            </span>
+          </InfoRow>
+          <InfoRow icon={<MailIcon className="h-5 w-5" />} label={t.emailLabel}>
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              className="inline-flex min-h-11 items-center self-start text-base font-semibold break-all text-on-ink underline-offset-4 hover:underline"
+            >
+              <bdi>{CONTACT_EMAIL}</bdi>
+            </a>
+          </InfoRow>
         </ul>
       </div>
     </section>

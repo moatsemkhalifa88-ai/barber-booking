@@ -58,3 +58,13 @@ export function formatInstant(instant: Date, locale: Locale): string {
     timeZone: SHOP_TIMEZONE,
   }).format(instant);
 }
+
+/**
+ * Price split for display typography: the amount in the display face, the ₪
+ * sign smaller in the body face. `symbolFirst` follows formatPrice ("₪50" in
+ * English, "50 ₪" in Hebrew); render inside an LTR-isolated span.
+ */
+export function priceParts(priceIls: number, locale: Locale): { amount: string; symbol: string; symbolFirst: boolean } {
+  const amount = Number.isInteger(priceIls) ? String(priceIls) : priceIls.toFixed(2);
+  return { amount, symbol: "₪", symbolFirst: locale === "en" };
+}

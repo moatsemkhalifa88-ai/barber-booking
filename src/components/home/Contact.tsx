@@ -4,7 +4,7 @@ import type { Dictionary } from "@/i18n";
 
 export function Contact({ dict }: { dict: Dictionary }) {
   return (
-    <section id="contact" className="section-y border-b border-border bg-surface-2">
+    <section id="contact" className="section-y bg-surface">
       <div className="container-page flex max-w-3xl flex-col gap-8">
         <SectionHeading
           eyebrow={dict.contact.eyebrow}
