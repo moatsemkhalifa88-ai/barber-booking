@@ -81,7 +81,6 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
 
   const sectionRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const shouldRevealRef = useRef(false);
 
   const selectedService = services.find((service) => service.id === serviceId) ?? null;
   const dayKey = serviceId ? `${serviceId}|${date}` : null;
@@ -132,17 +131,20 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
   // Navigation between steps: scroll the flow into view and focus the new heading.
   // ---------------------------------------------------------------------------
 
+  // A counter rather than "step changed": a price row or the quick-booking card
+  // must still bring the flow into view when it is already on step 2.
+  const [revealRequest, setRevealRequest] = useState(0);
+
   const goToStep = useCallback((next: Step) => {
-    shouldRevealRef.current = true;
     setStep(next);
+    setRevealRequest((count) => count + 1);
   }, []);
 
   useEffect(() => {
-    if (!shouldRevealRef.current) return;
-    shouldRevealRef.current = false;
+    if (revealRequest === 0) return;
     sectionRef.current?.scrollIntoView({ block: "start", behavior: prefersReducedMotion() ? "auto" : "smooth" });
     headingRef.current?.focus({ preventScroll: true });
-  }, [step, confirmation]);
+  }, [revealRequest]);
 
   // "Book this service" buttons elsewhere on the page pre-select a service and jump to step 2.
   useEffect(() => {
@@ -272,8 +274,8 @@ export function BookingWidget({ services, isBookingConfigured }: BookingWidgetPr
         notes: details.notes || undefined,
       }).then((result) => {
         if (result.success) {
-          shouldRevealRef.current = true;
           setConfirmation(result.data);
+          setRevealRequest((count) => count + 1);
         } else {
           setSubmitError(result.error);
           // The slot may have just been taken: refetch this day the next time it is shown.

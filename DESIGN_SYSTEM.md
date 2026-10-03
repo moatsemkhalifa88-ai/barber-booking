@@ -142,9 +142,10 @@ Defined in `globals.css` (`.price-row`, `.barber-card`, `[data-reveal]`) and `Sc
 - **Mobile menu:** full-height `ink` sheet (portalled), with 56 px rows: הזמנת תור · התור שלי · שירותים · הספרים · שעות פעילות · צור קשר. Below them sit the language switch and a pinned `brand` button. It traps focus, closes on Esc, and locks page scroll.
 
 ### Hero
-- `ink` ground.
-- **Phones:** a large photo (`27svh`), then the headline (first line `on-ink`, second line `brand`), the short subtitle, the quick-booking card and the stats line. The card's button sits on the first screen.
-- **Desktop:** text and card on the start side, a tall photo on the end side.
+- **Full-bleed photo:** the barber photo covers the whole hero edge to edge, right under the header (`object-fit: cover`). On desktop the photo box is 125% wide and anchored to the start edge, so the barber's face and hands sit on the side opposite the text.
+- **Scrim** (`.hero-scrim`): a solid 55% `ink` layer plus a gradient to about 85% on the text side (the bottom on phones, the start edge on desktop). Measured against the lightest photo pixel behind each line, the worst case is 5.9:1 (the orange headline line); body text is at least 10:1.
+- **Content on top**, on the start side (right in Hebrew, left in English): the headline (first line `on-ink`, second line `brand`), the short text, the quick-booking card and the stats line.
+- **Height:** `86svh` on desktop. On phones it fills the first screen below the header and banner, with the content at the bottom, so the headline and the card's "הזמינו תור" button are visible without scrolling.
 - **Quick-booking card** (`.tone-light`, `surface`): service and day as native `<select>`s side by side, then a `brand` "הזמינו תור" button. It dispatches the book-service event with both choices, so the booking flow opens at step 2 with them pre-selected.
 
 ### About band
@@ -153,8 +154,8 @@ Defined in `globals.css` (`.price-row`, `.barber-card`, `[data-reveal]`) and `Sc
 
 ### Price list
 - `canvas` ground, centred, max 768 px wide, with 1px dividers above and below each row.
-- **Row:** thumbnail 64–80 px (16 px radius) · name (bold) + duration (and the description from `sm` up) · price in the display face · "הזמינו" + arrow (arrow only on phones).
-- The whole row is a link with a full accessible name ("הזמינו תספורת גברים, 45 דק׳, 50 ₪"). It pre-selects the service in the booking flow.
+- **Row:** thumbnail 64–80 px (16 px radius) · name (bold) + duration (and the description from `sm` up) · price in the display face · one arrow (with the "הזמינו" label from `sm` up).
+- The whole row is one link with a full accessible name ("הזמינו תספורת גברים, 45 דק׳, 50 ₪"). It scrolls to the booking flow with that service pre-selected on step 2, even when the flow is already open.
 
 ### Barber card
 - **Homepage:** portrait photo (3:4), name in the display face (34 px), and role (`accent` for the owner). On phones they sit in a 70%-wide swipe row; on desktop, 3 columns.

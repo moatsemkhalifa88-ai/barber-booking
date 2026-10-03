@@ -296,9 +296,10 @@ a,
 .price-row__thumb img {
   transition: transform 600ms var(--ease-out-soft);
 }
+/* No display override here: these rules are unlayered and would beat the
+   Tailwind display utilities on the same elements (inline-flex, hidden). */
 .price-row__price,
 .price-row__arrow {
-  display: inline-block;
   transition: transform 250ms var(--ease-out-soft);
 }
 
@@ -442,5 +443,29 @@ a,
   }
   [data-reveal="in"] {
     animation: none;
+  }
+}
+
+/* ---- Hero scrim ----
+ * A solid 55% ink layer over the whole photo, plus a gradient that darkens the
+ * text side further (to ~85%): the bottom on phones, where the content sits,
+ * and the start edge on desktop (right in Hebrew, left in English). Measured
+ * text contrast on top of the real photo is ≥ 4.5:1 (see DESIGN_SYSTEM.md). */
+.hero-scrim {
+  background:
+    linear-gradient(to bottom, rgb(27 23 20 / 0) 12%, rgb(27 23 20 / 0.66) 40%),
+    linear-gradient(rgb(27 23 20 / 0.55), rgb(27 23 20 / 0.55));
+}
+
+@media (min-width: 1024px) {
+  .hero-scrim {
+    background:
+      linear-gradient(to right, rgb(27 23 20 / 0.66) 0%, rgb(27 23 20 / 0.5) 38%, rgb(27 23 20 / 0) 70%),
+      linear-gradient(rgb(27 23 20 / 0.55), rgb(27 23 20 / 0.55));
+  }
+  [dir="rtl"] .hero-scrim {
+    background:
+      linear-gradient(to left, rgb(27 23 20 / 0.66) 0%, rgb(27 23 20 / 0.5) 38%, rgb(27 23 20 / 0) 70%),
+      linear-gradient(rgb(27 23 20 / 0.55), rgb(27 23 20 / 0.55));
   }
 }

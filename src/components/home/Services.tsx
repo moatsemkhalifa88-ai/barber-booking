@@ -47,11 +47,11 @@ export function Services({ dict, locale }: { dict: Dictionary; locale: Locale })
                       <span className="font-display text-[40px] leading-none font-bold tabular-nums">{parts.amount}</span>
                       {parts.symbolFirst ? null : symbol}
                     </span>
-                    <span className="hidden items-center gap-1 text-sm font-bold text-accent sm:inline-flex">
-                      {dict.services.bookShort}
-                      <ForwardIcon className="price-row__arrow h-4 w-4" />
+                    {/* One arrow at every width; the "הזמינו" label joins it from sm up. */}
+                    <span className="inline-flex items-center gap-1 text-sm font-bold text-accent">
+                      <span className="hidden sm:inline">{dict.services.bookShort}</span>
+                      <ForwardIcon className="price-row__arrow h-5 w-5" />
                     </span>
-                    <ForwardIcon className="price-row__arrow h-5 w-5 text-accent sm:hidden" />
                   </span>
                 </BookServiceLink>
               </li>

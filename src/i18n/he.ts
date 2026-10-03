@@ -41,8 +41,8 @@ export const he: Dictionary = {
 
   hero: {
     badge: "מספרת בוטיק",
-    titleLead: "מסורת שפוגשת",
-    titleHighlight: "סטייל מודרני",
+    titleLead: "מספרה קלאסית.",
+    titleHighlight: "סטייל של היום.",
     subtitle:
       "שלושה ספרים מקצועיים, יחס אישי וזמן אמיתי בכל ביקור. בוחרים שירות, יום ושעה – והכיסא שמור לכם.",
     subtitleShort: "יחס אישי, דיוק בכל פרט, ותור שנקבע בתוך דקה.",

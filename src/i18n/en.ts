@@ -40,7 +40,7 @@ export const en = {
 
   hero: {
     badge: "Boutique Barbershop",
-    titleLead: "Tradition meets",
+    titleLead: "Where tradition meets",
     titleHighlight: "modern style",
     subtitle:
       "Three professional barbers, personal attention and real time for every client. Choose a service, a day and a time — and your chair is reserved.",

@@ -57,8 +57,8 @@ Every Hebrew string on the site and in the emails, grouped by section. It is gen
 | Key | Hebrew |
 |---|---|
 | `badge` | מספרת בוטיק |
-| `titleLead` | מסורת שפוגשת |
-| `titleHighlight` | סטייל מודרני |
+| `titleLead` | מספרה קלאסית. |
+| `titleHighlight` | סטייל של היום. |
 | `subtitle` | שלושה ספרים מקצועיים, יחס אישי וזמן אמיתי בכל ביקור. בוחרים שירות, יום ושעה – והכיסא שמור לכם. |
 | `subtitleShort` | יחס אישי, דיוק בכל פרט, ותור שנקבע בתוך דקה. |
 | `imageAlt` | ספר מסדר במספריים זקן של לקוח, במספרה באור חמים ועמום |
